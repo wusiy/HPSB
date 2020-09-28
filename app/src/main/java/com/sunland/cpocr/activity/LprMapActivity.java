@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -105,8 +106,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private static int MAIN_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
     private static int MAIN_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
 
-
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         lat = 0;
@@ -118,14 +117,18 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mapView.onCreate(savedInstanceState);
         if (aMap == null) {
             aMap = mapView.getMap();
-
-            //设置显示定位按钮 并且可以点击
-            UiSettings settings = aMap.getUiSettings();
-            aMap.setLocationSource((LocationSource) this);//设置了定位的监听
-            // 是否显示定位按钮
-            settings.setMyLocationButtonEnabled(true);
-            aMap.setMyLocationEnabled(true);//显示定位层并且可以触发定位,默认是flase
         }
+
+//        aMap.setLoadOfflineData(false);
+//        aMap.setLoadOfflineData(true);
+        //设置显示定位按钮 并且可以点击
+        UiSettings settings = aMap.getUiSettings();
+        aMap.setLocationSource((LocationSource) this);//设置了定位的监听
+        // aMap.reloadMap();
+
+        // 是否显示定位按钮
+        settings.setMyLocationButtonEnabled(true);
+        aMap.setMyLocationEnabled(true);//显示定位层并且可以触发定位,默认是flase
 
         mTraceoverlay = new TraceOverlay(aMap);
         //开始定位
@@ -208,39 +211,25 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             case R.id.tracks:
                 Intent intent;
                 intent = new Intent(LprMapActivity.this, TrackRecordActivity.class);
-                //intent = new Intent(MainActivity.this, com.sunland.cpocr.path_record.android_path_record.MainActivity.class);
                 startActivity(intent);
                 break;
 
             case R.id.navi:
-//                if(istracing) {
-//                    Toast.makeText(getApplicationContext(),"跳转导航,轨迹录制已结束",Toast.LENGTH_SHORT).show();
-//
-//                    //item.setIcon(getResources().getDrawable(R.drawable.start1));
-//                    istracing = false;
-//                    mEndTime = System.currentTimeMillis();
-//                    mOverlayList.add(mTraceoverlay);
-//                    DecimalFormat decimalFormat = new DecimalFormat("0.0");
-//                    //mResultShow.setText(decimalFormat.format(getTotalDistance() / 1000d) + "KM");
-//                    LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-//                    mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, LprMapActivity.this);
-//                    saveRecord(record.getPathline(), record.getDate());
-//                }
-//                Intent intent2;
-//                intent2 = new Intent(LprMapActivity.this, CalculateRouteActivity.class);
-//                //intent = new Intent(MainActivity.this, com.sunland.cpocr.path_record.android_path_record.MainActivity.class);
-//                startActivity(intent2);
                 mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
-
                 break;
+
             case R.id.track_records:
                 Toast.makeText(getApplicationContext(),"跳转巡逻记录",Toast.LENGTH_SHORT).show();
                 Intent intent1;
                 intent1 = new Intent(LprMapActivity.this, CpRecordActivity.class);
-                //intent = new Intent(MainActivity.this, com.sunland.cpocr.path_record.android_path_record.MainActivity.class);
                 startActivity(intent1);
-
                 break;
+
+            case R.id.offline_map:
+                //在Activity页面调用startActvity启动离线地图组件
+                startActivity(new Intent(this.getApplicationContext(), com.amap.api.maps.offlinemap.OfflineMapActivity.class));
+                break;
+
 
         }
         return super.onOptionsItemSelected(item);
@@ -540,7 +529,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     protected void updateUi(int frameLeft, int frameTop, int frameRight, int frameButton) {
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT);
-        params.setMargins(frameRight + mSeekBar.getWidth() - 30, 0, 0, 0);
+        //params.setMargins(frameRight + mSeekBar.getWidth() - 30, 0, 0, 0);
+        params.setMargins(frameRight + mSeekBar.getWidth() + 170, 0, 0, 0);
 
         mSearchModuelDeletage = new SearchModuleDelegate();
         mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.DEST_POI_TYPE);
@@ -555,11 +545,11 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
         RelativeLayout.LayoutParams flashLp = (RelativeLayout.LayoutParams) mFlashBtn.getLayoutParams();
         flashLp.addRule(RelativeLayout.LEFT_OF, -1);
-        flashLp.setMarginStart(frameRight - dp2px(80));
+        flashLp.setMarginStart(frameRight - dp2px(10));
         mFlashBtn.setLayoutParams(flashLp);
 
         RelativeLayout.LayoutParams seekBarLp = (RelativeLayout.LayoutParams) mSeekBar.getLayoutParams();
-        seekBarLp.setMarginStart(frameRight - 40);
+        seekBarLp.setMarginStart(frameRight + 110);
         mSeekBar.setLayoutParams(seekBarLp);
 
     }
@@ -627,14 +617,16 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     private void showToast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
+        if(msg.equals("取消成功")){
+            mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
+        }
     }
 
     //开始路径选择
     private void chooseRoute(){
         mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
 
-        AlertDialog.Builder builder = DialogHelp.getMessageOkDialog(LprMapActivity.this, "确认",
+        AlertDialog.Builder builder = DialogHelp.getConfirmDialog(LprMapActivity.this,
                         "是否由 " + location + " 导航至 " + deslocation, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -677,7 +669,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             Gson gson = new Gson();
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
-
         }
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -699,5 +690,18 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         final String hpzlStr = hpzls[1];
         Toast.makeText(this,hphm,Toast.LENGTH_SHORT).show();
         //adapter.add(hphm, hpzl, hpzlStr, hpysStr);
+    }
+
+    @Override
+    //安卓重写返回键事件
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_BACK){
+            if(mSearchModuelDeletage.getWidget(this).getVisibility() ==  View.VISIBLE){
+                mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
+            } else{
+                super.onKeyDown(keyCode, event);
+            }
+        }
+        return true;
     }
 }

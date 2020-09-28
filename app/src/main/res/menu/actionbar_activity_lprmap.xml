@@ -20,4 +20,10 @@
         android:icon="@drawable/tracking_records"
         android:title="路径记录"></item>
 
+    <item android:id="@+id/offline_map"
+        android:title="离线地图"></item>
+
+    <item android:id="@+id/settings"
+        android:title="设置"></item>
+
 </menu>

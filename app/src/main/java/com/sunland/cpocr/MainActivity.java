@@ -31,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent;
         intent = new Intent(MainActivity.this, LprMapActivity.class);
         //intent = new Intent(MainActivity.this, T1.class);
-        //intent = new Intent(MainActivity.this, RouteNaviActivity.class);
-        //intent = new Intent(MainActivity.this, CalculateRouteActivity.class);
         startActivity(intent);
         finish();
 

@@ -37,6 +37,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
 
+
+
     <application
         android:name="com.sunland.cpocr.MyApplication"
         android:allowBackup="true"
@@ -120,6 +122,9 @@
             android:label="@string/app_name"
             android:screenOrientation="landscape" >
         </activity>
+
+        <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
+            android:screenOrientation="landscape"  />
 
 
     </application>

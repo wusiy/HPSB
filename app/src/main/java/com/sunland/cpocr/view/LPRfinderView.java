@@ -104,43 +104,43 @@ public final class LPRfinderView extends View {
             frame = new Rect(l, t, r, b);
         }
         paint.setColor(maskColor);
-        canvas.drawRect(0, 0, frame.right+ 110, frame.top, paint);
+        canvas.drawRect(0, 0, frame.right+ 310, frame.top, paint);
 
-        canvas.drawRect(0, frame.top, frame.left, frame.bottom , paint);
+        canvas.drawRect(0, frame.top, frame.left + 70, frame.bottom , paint);
 
-        canvas.drawRect(frame.right  - ShrinkSize, frame.top, frame.right + 110, frame.bottom ,
+        canvas.drawRect(frame.right  - ShrinkSize + 100, frame.top, frame.right + 310, frame.bottom ,
                 paint);
-        canvas.drawRect(0, frame.bottom , frame.right + 110, height, paint);
+        canvas.drawRect(0, frame.bottom , frame.right + 310, height, paint);
 
         paintLine.setColor(frameColor);
         paintLine.setStrokeWidth(5);
         paintLine.setAntiAlias(true);
 
         int num = (r - l) / 10;
-        canvas.drawLine(l - 8 + ShrinkSize, t, l + num + ShrinkSize, t, paintLine);
-        canvas.drawLine(l + ShrinkSize, t, l + ShrinkSize, t + num, paintLine);
+        canvas.drawLine(l - 8 + ShrinkSize + 70, t, l + num + ShrinkSize + 70, t, paintLine);
+        canvas.drawLine(l + ShrinkSize + 70, t, l + ShrinkSize + 70, t + num, paintLine);
 
-        canvas.drawLine(r + 8 - ShrinkSize, t, r - num - ShrinkSize, t, paintLine);
-        canvas.drawLine(r - ShrinkSize, t, r - ShrinkSize, t + num, paintLine);
+        canvas.drawLine(r + 8 - ShrinkSize + 100, t, r - num - ShrinkSize + 100, t, paintLine);
+        canvas.drawLine(r - ShrinkSize + 100, t, r - ShrinkSize + 100, t + num, paintLine);
 
-        canvas.drawLine(l - 8 + ShrinkSize, b, l + num + ShrinkSize, b, paintLine);
-        canvas.drawLine(l + ShrinkSize, b, l + ShrinkSize, b - num, paintLine);
+        canvas.drawLine(l - 8 + ShrinkSize + 70, b, l + num + ShrinkSize + 70, b, paintLine);
+        canvas.drawLine(l + ShrinkSize + 70, b, l + ShrinkSize + 70, b - num, paintLine);
 
-        canvas.drawLine(r + 8 - ShrinkSize, b, r - num - ShrinkSize, b, paintLine);
-        canvas.drawLine(r - ShrinkSize, b, r - ShrinkSize, b - num, paintLine);
+        canvas.drawLine(r + 8 - ShrinkSize + 100, b, r - num - ShrinkSize + 100, b, paintLine);
+        canvas.drawLine(r - ShrinkSize + 100, b, r - ShrinkSize + 100, b - num, paintLine);
 
         paintLine.setColor(laserColor);
         paintLine.setAlpha(100);
         paintLine.setStrokeWidth(3);
         paintLine.setAntiAlias(true);
 
-        canvas.drawLine(l + ShrinkSize, t + num, l + ShrinkSize, b - num, paintLine); //左
+        canvas.drawLine(l + ShrinkSize + 70, t + num, l + ShrinkSize + 70, b - num, paintLine); //左
 
-        canvas.drawLine(r - ShrinkSize, t + num, r - ShrinkSize, b - num, paintLine);//右
+        canvas.drawLine(r - ShrinkSize + 100, t + num, r - ShrinkSize + 100, b - num, paintLine);//右
 
-        canvas.drawLine(l + num + ShrinkSize, t, r - num - ShrinkSize, t, paintLine);
+        canvas.drawLine(l + num + ShrinkSize + 70, t, r - num - ShrinkSize + 100, t, paintLine);
 
-        canvas.drawLine(l + num + ShrinkSize, b, r - num - ShrinkSize, b, paintLine);
+        canvas.drawLine(l + num + ShrinkSize + 70, b, r - num - ShrinkSize + 100, b, paintLine);
 
 
 //	     mText = "请将车牌置于框内";
