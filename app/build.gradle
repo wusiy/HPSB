@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion = '30.0.2'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    signingConfigs {
+        debug{
+            keyAlias 'key1'
+            keyPassword 'sunland'
+            storeFile rootProject.file('../Hpsb/debug.jks')
+            storePassword 'sunland'
+
+        }
+        release {
+            keyAlias 'key1'
+            keyPassword 'sunland'
+            storeFile rootProject.file('../Hpsb/debug.jks')
+            storePassword 'sunland'
+        }
+    }
+    defaultConfig {
+        applicationId "com.sunland.cpocr"
+        minSdkVersion 17
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            multiDexEnabled true
+            manifestPlaceholders = [IS_DEMO_VALUE: "debug", CATEGORY_VALUE: "LAUNCHER"]
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+
+        }
+        release {
+            minifyEnabled false
+            multiDexEnabled true
+            manifestPlaceholders = [IS_DEMO_VALUE: "debug", CATEGORY_VALUE: "LAUNCHER"]
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation files('libs/AMap3DMap_7.6.0_AMapNavi_7.6.0_AMapSearch_7.6.0_AMapTrack_1.3.0_AMapLocation_5.2.0_20200915.jar')
+    implementation project(path: ':AMapPoiSearchModule')
+    testImplementation 'junit:junit:4.13'
+
+    androidTestImplementation('androidx.test.ext:junit:1.1.2') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.3.0') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+
+}

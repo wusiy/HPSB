@@ -1,0 +1,3 @@
+include ':AMapPoiSearchModule'
+include ':app'
+rootProject.name = "Hpsb"

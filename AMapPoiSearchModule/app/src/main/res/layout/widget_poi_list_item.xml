@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/common_bg"
+                android:orientation="vertical"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_alignParentBottom="true"
+        android:background="@color/divider_color"/>
+
+    <RelativeLayout
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/divider">
+
+        <ImageView
+            android:id="@+id/icon_iv"
+            android:layout_width="@dimen/small_icon_size"
+            android:layout_height="@dimen/small_icon_size"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/poi"/>
+
+        <LinearLayout
+            android:id="@+id/title_ll"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/padding"
+            android:layout_toRightOf="@id/icon_iv"
+            android:orientation="vertical">
+
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/dis_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:textSize="@dimen/suttitle_font_size"
+                    android:visibility="gone"
+                    android:textColor="@color/normal_sub_title_color"
+                    ></TextView>
+
+                <TextView
+                    android:id="@+id/title_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_toLeftOf="@id/dis_tv"
+                    android:text="北京 title"
+                    android:textColor="@color/normal_text_color"
+                    android:textSize="@dimen/normal_font_size"/>
+            </RelativeLayout>
+
+
+            <TextView
+                android:id="@+id/sub_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="北京 subTitle"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/normal_sub_title_color"
+                android:textSize="@dimen/suttitle_font_size"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,83 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <RelativeLayout
+            android:id="@+id/re_c"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            >
+
+            <SurfaceView
+                android:id="@+id/surfaceViwe"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.sunland.cpocr.utils.VerticalSeekBar
+                android:id="@+id/vertical_Seekbar"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:paddingLeft="10dp"
+                android:progressDrawable="@drawable/cpocr_seek_bar_progress"
+                android:thumb="@drawable/cpocr_thumb_seekbar"
+                android:thumbOffset="0dip" />
+
+            <ImageButton
+                android:id="@+id/photoflash"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@id/vertical_Seekbar"
+                android:background="@null"
+                android:scaleType="centerInside"
+                android:src="@drawable/cpocr_flash_off" />
+
+            <ImageButton
+                android:id="@+id/orc_back_btn"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:scaleType="centerInside"
+                android:background="@drawable/back_icon" />
+
+            <com.amap.api.maps.MapView
+                android:id="@+id/mapview"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                />
+
+        </RelativeLayout>
+
+
+<!--<FrameLayout-->
+<!--    android:layout_width="0dp"-->
+<!--    android:layout_height="match_parent"-->
+<!--    android:layout_weight="1"-->
+<!--   >-->
+
+<!--    <com.amap.api.maps.MapView-->
+<!--        android:id="@+id/mapview"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        />-->
+<!--</FrameLayout>-->
+
+    </LinearLayout>
+
+
+</FrameLayout>
+
+
