@@ -30,7 +30,6 @@ import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
-import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.navi.AMapNavi;
@@ -50,7 +49,6 @@ import com.amap.api.navi.model.AMapServiceAreaInfo;
 import com.amap.api.navi.model.AimLessModeCongestionInfo;
 import com.amap.api.navi.model.AimLessModeStat;
 import com.amap.api.navi.model.NaviInfo;
-import com.amap.api.navi.model.NaviLatLng;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.trace.LBSTraceClient;
 import com.amap.api.trace.TraceListener;
@@ -63,7 +61,6 @@ import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
-import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
 import com.sunland.cpocr.db.DbTracks;
@@ -290,8 +287,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 //在Activity页面调用startActvity启动离线地图组件
                 startActivity(new Intent(this.getApplicationContext(), com.amap.api.maps.offlinemap.OfflineMapActivity.class));
                 break;
-
-
         }
         return super.onOptionsItemSelected(item);
     }

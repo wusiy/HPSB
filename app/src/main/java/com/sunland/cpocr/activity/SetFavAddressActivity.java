@@ -57,8 +57,6 @@ public class SetFavAddressActivity extends AppCompatActivity {
         } catch (Exception e) {
             ;
         }
-
-
     }
 
     private SearchModuleDelegate.IParentDelegate mSearchModuleParentDelegate = new IParentDelegate() {

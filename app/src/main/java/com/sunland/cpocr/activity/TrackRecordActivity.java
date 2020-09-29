@@ -7,17 +7,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-
 import com.sunland.cpocr.R;
-
 import com.sunland.cpocr.activity.adapter.RecordAdapter;
 import com.sunland.cpocr.db.DbTracks;
 import com.sunland.cpocr.path_record.record.PathRecord;
-
 import java.util.ArrayList;
 import java.util.List;
-
-
 
 /**
  * 所有轨迹list展示activity

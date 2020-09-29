@@ -40,11 +40,7 @@ import com.amap.api.navi.model.NaviLatLng;
 import com.amap.api.navi.view.RouteOverLay;
 
 import com.autonavi.tbt.TrafficFacilityInfo;
-import com.google.gson.Gson;
-import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
-import com.sunland.cpocr.T1;
-import com.sunland.cpocr.activity.CityChooseActivity;
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.bean.StrategyBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
@@ -230,7 +226,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         mRouteTextDistanceThree = (TextView) findViewById(R.id.route_line_three_distance);
     }
 
-
     /**
      * 初始化AMap对象
      */
@@ -261,7 +256,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         routeOverlays.put(routeId, routeOverLay);
         dialog.dismiss();
     }
-
 
     /**
      * 开始导航

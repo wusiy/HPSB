@@ -106,12 +106,6 @@
         </activity>
 
         <activity
-            android:name=".activity.BaseMapActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="landscape" >
-        </activity>
-
-        <activity
             android:name=".activity.CityChooseActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape" >
@@ -125,12 +119,6 @@
 
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
             android:screenOrientation="landscape"  />
-
-        <activity
-            android:name=".T1"
-            android:label="@string/app_name"
-            android:screenOrientation="landscape" >
-        </activity>
 
 
     </application>

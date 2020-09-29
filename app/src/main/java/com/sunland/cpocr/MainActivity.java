@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent;
         intent = new Intent(MainActivity.this, LprMapActivity.class);
         intent.putExtra(NAVI_TYPE_KEY, "");
-        //intent = new Intent(MainActivity.this, T1.class);
         startActivity(intent);
         finish();
 
