@@ -9,6 +9,8 @@ import com.sunland.cpocr.activity.LprMapActivity;
 
 import java.io.File;
 
+import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
+
 public class MainActivity extends AppCompatActivity {
 
     private PermissionManager mPermissionMgr;
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent;
         intent = new Intent(MainActivity.this, LprMapActivity.class);
+        intent.putExtra(NAVI_TYPE_KEY, "");
         //intent = new Intent(MainActivity.this, T1.class);
         startActivity(intent);
         finish();

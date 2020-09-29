@@ -31,8 +31,9 @@ import com.sunland.cpocr.R;
  */
 public class RouteNaviActivity extends Activity implements AMapNaviListener, AMapNaviViewListener {
 
-	private AMapNaviView mAMapNaviView;
-	private AMapNavi mAMapNavi;
+	AMapNaviView mAMapNaviView;
+	AMapNavi mAMapNavi;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,22 +41,26 @@ public class RouteNaviActivity extends Activity implements AMapNaviListener, AMa
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_basic_navi);
 
+
 		mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
 		mAMapNaviView.onCreate(savedInstanceState);
 		mAMapNaviView.setAMapNaviViewListener(this);
-		mAMapNavi = AMapNavi.getInstance(getApplicationContext());
 
+		mAMapNavi = AMapNavi.getInstance(getApplicationContext());
 		mAMapNavi.addAMapNaviListener(this);
 		mAMapNavi.setUseInnerVoice(true);
-		//模拟导航时的时速
+
 		mAMapNavi.setEmulatorNaviSpeed(60);
-//		boolean gps=getIntent().getBooleanExtra("gps", true);
+//		boolean gps=getIntent().getBooleanExtra("gps", false);
 //		if(gps){
 //			mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
 //		}else{
-//			mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode); //模拟导航模式
+//			mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
 //		}
-		mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
+
+		mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
+
+
 
 	}
 

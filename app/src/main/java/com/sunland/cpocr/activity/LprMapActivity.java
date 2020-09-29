@@ -33,6 +33,23 @@ import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
+import com.amap.api.navi.AMapNavi;
+import com.amap.api.navi.AMapNaviListener;
+import com.amap.api.navi.AMapNaviView;
+import com.amap.api.navi.AMapNaviViewListener;
+import com.amap.api.navi.model.AMapCalcRouteResult;
+import com.amap.api.navi.model.AMapLaneInfo;
+import com.amap.api.navi.model.AMapModelCross;
+import com.amap.api.navi.model.AMapNaviCameraInfo;
+import com.amap.api.navi.model.AMapNaviCross;
+import com.amap.api.navi.model.AMapNaviInfo;
+import com.amap.api.navi.model.AMapNaviLocation;
+import com.amap.api.navi.model.AMapNaviRouteNotifyData;
+import com.amap.api.navi.model.AMapNaviTrafficFacilityInfo;
+import com.amap.api.navi.model.AMapServiceAreaInfo;
+import com.amap.api.navi.model.AimLessModeCongestionInfo;
+import com.amap.api.navi.model.AimLessModeStat;
+import com.amap.api.navi.model.NaviInfo;
 import com.amap.api.navi.model.NaviLatLng;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.trace.LBSTraceClient;
@@ -44,6 +61,7 @@ import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
+import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
 import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
@@ -61,11 +79,19 @@ import java.util.Date;
 import java.util.List;
 
 
-public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener, TraceListener {
+public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener,
+        TraceListener, AMapNaviListener, AMapNaviViewListener {
+
+    public static final String FAVTYPE_KEY = "favtype";
+    public static final String POIITEM_STR_KEY = "poiitem_str";
+    public static final String NAVI_TYPE_KEY = "navi";
 
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
+    //
+    private AMapNaviView mAMapNaviView;
+    private AMapNavi mAMapNavi;
     //声明AMapLocationClient类对象，定位发起端
     private AMapLocationClient mLocationClient = null;
     //声明mLocationOption对象，定位参数
@@ -102,15 +128,17 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     // private TextView mResultShow;
     private Marker mlocMarker;
     private SearchModuleDelegate mSearchModuelDeletage;
+    private String startType;
 
-    private static int MAIN_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
-    private static int MAIN_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
+    private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
+    private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
+    private static int LPRMAP_ACTIVITY_START_NAVI_CODE = 3;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         lat = 0;
         actionBar.setTitle("");
-
+        startType = getIntent().getStringExtra(NAVI_TYPE_KEY);
         //获取地图控件引用
         mapView = (MapView) findViewById(R.id.mapview);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
@@ -119,21 +147,54 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             aMap = mapView.getMap();
         }
 
-//        aMap.setLoadOfflineData(false);
-//        aMap.setLoadOfflineData(true);
+        aMap.setLoadOfflineData(false);
+        aMap.setLoadOfflineData(true);
         //设置显示定位按钮 并且可以点击
         UiSettings settings = aMap.getUiSettings();
         aMap.setLocationSource((LocationSource) this);//设置了定位的监听
         // aMap.reloadMap();
-
         // 是否显示定位按钮
         settings.setMyLocationButtonEnabled(true);
         aMap.setMyLocationEnabled(true);//显示定位层并且可以触发定位,默认是flase
 
+        mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
+        mAMapNaviView.onCreate(savedInstanceState);
+        mAMapNaviView.setAMapNaviViewListener(this);
+
+        mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+        mAMapNavi.addAMapNaviListener(this);
+        mAMapNavi.setUseInnerVoice(true);
+
         mTraceoverlay = new TraceOverlay(aMap);
+        initui();
         //开始定位
         location();
         initpolyline();
+    }
+
+    private void initui(){
+        if(startType.equals("")){
+            mapView.setVisibility(View.VISIBLE);
+            mAMapNaviView.setVisibility(View.INVISIBLE);
+        } else if(startType.equals("cal")){
+            mapView.setVisibility(View.VISIBLE);
+            mAMapNaviView.setVisibility(View.INVISIBLE);
+        } else if(startType.equals("false")){
+            mapView.setVisibility(View.INVISIBLE);
+            mAMapNaviView.setVisibility(View.VISIBLE);
+            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+            mAMapNavi.addAMapNaviListener(this);
+            mAMapNavi.setUseInnerVoice(true);
+            mAMapNavi.setEmulatorNaviSpeed(600);
+            mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
+        } else if(startType.equals("true")){
+            mapView.setVisibility(View.INVISIBLE);
+            mAMapNaviView.setVisibility(View.VISIBLE);
+            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+            mAMapNavi.addAMapNaviListener(this);
+            mAMapNavi.setUseInnerVoice(true);
+            mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
+        }
     }
 
     private void location() {
@@ -275,7 +336,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                     //添加图钉
                     // aMap.addMarker(getMarkerOptions(amapLocation));
-
                     Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
                     isFirstLoc = false;
                     mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
@@ -474,6 +534,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        mAMapNaviView.onResume();
     }
 
     /**
@@ -483,6 +544,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        mAMapNaviView.onPause();
     }
 
     /**
@@ -501,6 +563,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        mAMapNaviView.onDestroy();
+        mAMapNavi.stopNavi();
     }
 
     @Override
@@ -532,14 +596,21 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         //params.setMargins(frameRight + mSeekBar.getWidth() - 30, 0, 0, 0);
         params.setMargins(frameRight + mSeekBar.getWidth() + 170, 0, 0, 0);
 
+        mapView.setBackgroundColor(Color.WHITE);
+        mapView.setLayoutParams(params);
+        //mapView.setVisibility(View.INVISIBLE);
+
+        RelativeLayout.LayoutParams navi_params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
+        navi_params.setMargins(frameRight + mSeekBar.getWidth() -60, -300, -230, -300);
+        mAMapNaviView.setBackgroundColor(Color.WHITE);
+        mAMapNaviView.setLayoutParams(navi_params);
+        //mAMapNaviView.setVisibility(View.INVISIBLE);
+
         mSearchModuelDeletage = new SearchModuleDelegate();
         mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.DEST_POI_TYPE);
         mSearchModuelDeletage.bindParentDelegate(mSearchModuleParentDelegate);
 //        contentView.addView(mSearchModuelDeletage.getWidget(this));
-
-        mapView.setBackgroundColor(Color.WHITE);
-
-        mapView.setLayoutParams(params);
         re_c.addView(mSearchModuelDeletage.getWidget(this));
         mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
 
@@ -547,11 +618,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         flashLp.addRule(RelativeLayout.LEFT_OF, -1);
         flashLp.setMarginStart(frameRight - dp2px(10));
         mFlashBtn.setLayoutParams(flashLp);
-
         RelativeLayout.LayoutParams seekBarLp = (RelativeLayout.LayoutParams) mSeekBar.getLayoutParams();
         seekBarLp.setMarginStart(frameRight + 110);
         mSeekBar.setLayoutParams(seekBarLp);
-
     }
 
     private SearchModuleDelegate.IParentDelegate mSearchModuleParentDelegate = new ISearchModule.IDelegate.IParentDelegate() {
@@ -561,7 +630,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             Intent intent = new Intent();
             intent.setClass(LprMapActivity.this, CityChooseActivity.class);
             intent.putExtra(CityChooseActivity.CURR_CITY_KEY, mSearchModuelDeletage.getCurrCity().getCity());
-            LprMapActivity.this.startActivityForResult(intent, MAIN_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE);
+            LprMapActivity.this.startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE);
         }
 
         @Override
@@ -575,7 +644,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             intent.putExtra(FAVTYPE_KEY, type);
             Gson gson = new Gson();
             intent.putExtra(SetFavAddressActivity.CURR_CITY_KEY, gson.toJson(mSearchModuelDeletage.getCurrCity()));
-            startActivityForResult(intent, MAIN_ACTIVITY_REQUEST_FAV_ADDRESS_CODE);
+            startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE);
         }
         @Override
         public void onSetFavHomePoi() {
@@ -616,7 +685,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     };
 
     private void showToast(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         if(msg.equals("取消成功")){
             mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
         }
@@ -638,18 +707,18 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                 Intent intent;
                                 intent = new Intent(LprMapActivity.this, CalculateRouteActivity.class);
                                 intent.putExtras(bundle);
+                                //startActivityForResult(intent, LPRMAP_ACTIVITY_START_NAVI_CODE);
                                 startActivity(intent);
+                                finish();
 
                             }
                         });
                 builder.show();
     }
 
-    public static final String FAVTYPE_KEY = "favtype";
-    public static final String POIITEM_STR_KEY = "poiitem_str";
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (MAIN_ACTIVITY_REQUEST_FAV_ADDRESS_CODE == requestCode && resultCode == RESULT_OK) {
+        if (LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE == requestCode && resultCode == RESULT_OK) {
             String poiitemStr = data.getStringExtra(POIITEM_STR_KEY);
             int favType = data.getIntExtra(FAVTYPE_KEY, -1);
 
@@ -664,15 +733,35 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             }
         }
 
-        if (MAIN_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE == requestCode && resultCode == RESULT_OK) {
+        if (LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE == requestCode && resultCode == RESULT_OK) {
             String currCityStr = data.getStringExtra(CityChooseActivity.CURR_CITY_KEY);
             Gson gson = new Gson();
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
         }
 
+//        if (LPRMAP_ACTIVITY_START_NAVI_CODE == requestCode && resultCode == RESULT_OK) {
+//            mapView.setVisibility(View.INVISIBLE);
+//            mAMapNaviView.setVisibility(View.VISIBLE);
+//
+//            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+//            mAMapNavi.addAMapNaviListener(this);
+//            mAMapNavi.setUseInnerVoice(true);
+//            if(data.getStringExtra(NAVI_TYPE_KEY).equals("false")){ //模拟导航
+//                //模拟导航时的时速
+//                mAMapNavi.setEmulatorNaviSpeed(60);
+//                mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode); //模拟导航模式
+//            } else if(data.getStringExtra(NAVI_TYPE_KEY).equals("true")){
+//                mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
+//            }
+//
+//        } else if(LPRMAP_ACTIVITY_START_NAVI_CODE == requestCode && resultCode == RESULT_CANCELED){
+//            mapView.setVisibility(View.VISIBLE);
+//            mAMapNaviView.setVisibility(View.INVISIBLE);
+//            Toast.makeText(this, "路径出错， 本次导航取消", Toast.LENGTH_SHORT).show();
+//        }
+
         super.onActivityResult(requestCode, resultCode, data);
-        mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -703,5 +792,238 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             }
         }
         return true;
+    }
+
+    @Override
+    public void onInitNaviFailure() {
+        Toast.makeText(this, "init navi Failed", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onInitNaviSuccess() {
+    }
+
+    @Override
+    public void onStartNavi(int type) {
+
+    }
+
+    @Override
+    public void onTrafficStatusUpdate() {
+
+    }
+
+    @Override
+    public void onLocationChange(AMapNaviLocation location) {
+
+    }
+
+    @Override
+    public void onGetNavigationText(int type, String text) {
+
+    }
+
+    @Override
+    public void onGetNavigationText(String s) {
+
+    }
+
+    @Override
+    public void onEndEmulatorNavi() {
+    }
+
+    @Override
+    public void onArriveDestination() {
+    }
+
+    @Override
+    public void onCalculateRouteFailure(int errorInfo) {
+    }
+
+    @Override
+    public void onReCalculateRouteForYaw() {
+
+    }
+
+    @Override
+    public void onReCalculateRouteForTrafficJam() {
+
+    }
+
+    @Override
+    public void onArrivedWayPoint(int wayID) {
+
+    }
+
+    @Override
+    public void onGpsOpenStatus(boolean enabled) {
+    }
+
+    @Override
+    public void onNaviSetting() {
+    }
+
+    @Override
+    public void onNaviMapMode(int isLock) {
+
+    }
+
+    @Override
+    public void onNaviCancel() {
+        finish();
+    }
+
+    @Override
+    public void onNaviTurnClick() {
+
+    }
+
+    @Override
+    public void onNextRoadClick() {
+
+    }
+
+    @Override
+    public void onScanViewButtonClick() {
+    }
+
+    @Deprecated
+    @Override
+    public void onNaviInfoUpdated(AMapNaviInfo naviInfo) {
+    }
+
+    @Override
+    public void updateCameraInfo(AMapNaviCameraInfo[] aMapNaviCameraInfos) {
+
+    }
+
+    @Override
+    public void updateIntervalCameraInfo(AMapNaviCameraInfo aMapNaviCameraInfo, AMapNaviCameraInfo aMapNaviCameraInfo1, int i) {
+
+    }
+
+    @Override
+    public void onServiceAreaUpdate(AMapServiceAreaInfo[] aMapServiceAreaInfos) {
+
+    }
+
+    @Override
+    public void onNaviInfoUpdate(NaviInfo naviinfo) {
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(TrafficFacilityInfo trafficFacilityInfo) {
+
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(AMapNaviTrafficFacilityInfo aMapNaviTrafficFacilityInfo) {
+
+    }
+
+    @Override
+    public void showCross(AMapNaviCross aMapNaviCross) {
+    }
+
+    @Override
+    public void hideCross() {
+    }
+
+    @Override
+    public void showModeCross(AMapModelCross aMapModelCross) {
+
+    }
+
+    @Override
+    public void hideModeCross() {
+
+    }
+
+    @Override
+    public void showLaneInfo(AMapLaneInfo[] laneInfos, byte[] laneBackgroundInfo, byte[] laneRecommendedInfo) {
+
+    }
+
+    @Override
+    public void showLaneInfo(AMapLaneInfo aMapLaneInfo) {
+
+    }
+
+    @Override
+    public void hideLaneInfo() {
+
+    }
+
+    @Override
+    public void onCalculateRouteSuccess(int[] ints) {
+
+    }
+
+    @Override
+    public void notifyParallelRoad(int i) {
+
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(AMapNaviTrafficFacilityInfo[] aMapNaviTrafficFacilityInfos) {
+
+    }
+
+    @Override
+    public void updateAimlessModeStatistics(AimLessModeStat aimLessModeStat) {
+
+    }
+
+    @Override
+    public void updateAimlessModeCongestionInfo(AimLessModeCongestionInfo aimLessModeCongestionInfo) {
+
+    }
+
+    @Override
+    public void onPlayRing(int i) {
+
+    }
+
+    @Override
+    public void onCalculateRouteSuccess(AMapCalcRouteResult aMapCalcRouteResult) {
+
+    }
+
+    @Override
+    public void onCalculateRouteFailure(AMapCalcRouteResult aMapCalcRouteResult) {
+
+    }
+
+    @Override
+    public void onNaviRouteNotify(AMapNaviRouteNotifyData aMapNaviRouteNotifyData) {
+
+    }
+
+    @Override
+    public void onGpsSignalWeak(boolean b) {
+
+    }
+
+    @Override
+    public void onLockMap(boolean isLock) {
+    }
+
+    @Override
+    public void onNaviViewLoaded() {
+    }
+
+    @Override
+    public void onMapTypeChanged(int i) {
+
+    }
+
+    @Override
+    public void onNaviViewShowMode(int i) {
+
+    }
+
+    @Override
+    public boolean onNaviBackClick() {
+        return false;
     }
 }

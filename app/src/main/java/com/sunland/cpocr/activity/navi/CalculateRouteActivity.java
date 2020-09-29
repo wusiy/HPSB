@@ -1,16 +1,20 @@
 package com.sunland.cpocr.activity.navi;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
@@ -37,14 +41,19 @@ import com.amap.api.navi.view.RouteOverLay;
 
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
+import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
+import com.sunland.cpocr.T1;
 import com.sunland.cpocr.activity.CityChooseActivity;
+import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.bean.StrategyBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
 
 /**
  * 驾车路径规划并展示对应的路线标签
@@ -77,9 +86,9 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
      */
     private SparseArray<RouteOverLay> routeOverlays = new SparseArray<RouteOverLay>();
     /*
-            * strategyFlag转换出来的值都对应PathPlanningStrategy常量，用户也可以直接传入PathPlanningStrategy常量进行算路。
-            * 如:mAMapNavi.calculateDriveRoute(mStartList, mEndList, mWayPointList,PathPlanningStrategy.DRIVING_DEFAULT);
-            */
+     * strategyFlag转换出来的值都对应PathPlanningStrategy常量，用户也可以直接传入PathPlanningStrategy常量进行算路。
+     * 如:mAMapNavi.calculateDriveRoute(mStartList, mEndList, mWayPointList,PathPlanningStrategy.DRIVING_DEFAULT);
+     */
     int strategyFlag = 0;
 
     private Button mStartNaviButton;
@@ -90,6 +99,7 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     private TextView mRouteTextDistanceOne, mRouteTextDistanceTwo, mRouteTextDistanceThree;
     private TextView mCalculateRouteOverView;
     private ImageView mImageTraffic, mImageStrategy;
+    private ProgressDialog dialog;
 
     private int routeID = -1;
 
@@ -97,8 +107,10 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculate_route);
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("正在规划路径...");
+        dialog.show();
         Bundle bundle = this.getIntent().getExtras(); //读取intent的数据给bundle对象
-
         startLatlng = new NaviLatLng(bundle.getDouble("lat"),bundle.getDouble("lgt"));
         endLatlng = new NaviLatLng(bundle.getDouble("deslat"), bundle.getDouble("deslgt"));
 
@@ -218,6 +230,7 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         mRouteTextDistanceThree = (TextView) findViewById(R.id.route_line_three_distance);
     }
 
+
     /**
      * 初始化AMap对象
      */
@@ -241,12 +254,12 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     private void drawRoutes(int routeId, AMapNaviPath path) {
         mAMap.moveCamera(CameraUpdateFactory.changeTilt(0));
         RouteOverLay routeOverLay = new RouteOverLay(mAMap, path, this);
-
             routeOverLay.setWidth(60f);
 
         routeOverLay.setTrafficLine(true);
         routeOverLay.addToMap();
         routeOverlays.put(routeId, routeOverLay);
+        dialog.dismiss();
     }
 
 
@@ -255,17 +268,45 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
      */
     private void startNavi() {
         if (routeID != -1){
-            //mAMapNavi.selectRouteId(routeID);
-            Intent gpsintent = new Intent(getApplicationContext(), RouteNaviActivity.class);
-            gpsintent.putExtra("gps", true); // gps 为true为真实导航，为false为模拟导航
-            startActivity(gpsintent);
-            finish();
+            mAMapNavi.selectRouteId(routeID);
+//            Intent gpsintent = new Intent(getApplicationContext(), RouteNaviActivity.class);
+//            gpsintent.putExtra("gps", false); // gps 为true为真实导航，为false为模拟导航
+//            startActivity(gpsintent);
 
-//            Intent intent = new Intent();
-//            intent.putExtra("aa", "zzzz");
-//            CalculateRouteActivity.this.setResult(RESULT_OK, intent);
-//            CalculateRouteActivity.this.finish();
+            Intent intent = new Intent(CalculateRouteActivity.this, LprMapActivity.class);
+
+            final String items[] = {"模拟导航", "实时导航"};
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setTitle("选择导航方式")
+                    .setItems(items, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if(which == 0){
+                                intent.putExtra(NAVI_TYPE_KEY, "false");
+                                startActivity(intent);
+
+                            } else if(which == 1){
+                                intent.putExtra(NAVI_TYPE_KEY, "true");
+                                startActivity(intent);
+                              ;
+                            }
+
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create();
+            dialog.show();
+
+        } else{
+            Intent intent = new Intent();
+            intent.putExtra(NAVI_TYPE_KEY, "cal");
+            startActivity(intent);
         }
+
     }
 
     /**
@@ -776,5 +817,16 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     @Override
     public void onMapLoaded() {
         calculateDriveRoute();
+    }
+
+    @Override
+    //安卓重写返回键事件
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_BACK){
+            Intent intent= new Intent(CalculateRouteActivity.this, LprMapActivity.class);
+            intent.putExtra(NAVI_TYPE_KEY, "cal");
+            startActivity(intent);
+        }
+        return true;
     }
 }

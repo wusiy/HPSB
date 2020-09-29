@@ -126,6 +126,12 @@
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
             android:screenOrientation="landscape"  />
 
+        <activity
+            android:name=".T1"
+            android:label="@string/app_name"
+            android:screenOrientation="landscape" >
+        </activity>
+
 
     </application>
 
