@@ -48,7 +48,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name="com.sunland.cpocr.MainActivity"
-            android:screenOrientation = "landscape">
+            android:screenOrientation = "reverseLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -63,7 +63,7 @@
         <activity
             android:name="com.sunland.cpocr.activity.LprMapActivity"
             android:configChanges="orientation|keyboardHidden|layoutDirection|screenSize"
-            android:screenOrientation="landscape"
+            android:screenOrientation="reverseLandscape"
             android:windowSoftInputMode="stateHidden|stateUnchanged" />
 
         <activity
@@ -72,53 +72,53 @@
         <activity
             android:name=".activity.TrackRecordActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.RecordShowActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.CpRecordActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.navi.RouteNaviActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.navi.CalculateRouteActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.navi.StrategyChooseActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.CityChooseActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity
             android:name=".activity.SetFavAddressActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape" >
+            android:screenOrientation="reverseLandscape" >
         </activity>
 
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
-            android:screenOrientation="landscape"  />
+            android:screenOrientation="reverseLandscape"  />
 
 
     </application>
