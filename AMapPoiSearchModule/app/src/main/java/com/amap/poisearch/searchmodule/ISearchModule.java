@@ -66,6 +66,8 @@ public interface ISearchModule {
 
         public static final int START_POI_TYPE = 0;
         public static final int DEST_POI_TYPE = 1;
+        public static final int SET_HOME_TYPE = 2;
+        public static final int SET_COMPANY_TYPE = 3;
 
         /**
          * 绑定父控制类。不能处理的逻辑交由父控制类处理

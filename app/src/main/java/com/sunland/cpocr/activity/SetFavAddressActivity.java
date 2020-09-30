@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.amap.api.services.core.PoiItem;
+import com.amap.poisearch.searchmodule.ISearchModule;
 import com.amap.poisearch.searchmodule.ISearchModule.IDelegate.IParentDelegate;
 import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
@@ -36,14 +38,21 @@ public class SetFavAddressActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setfavaddress);
 
+        mFavType = getIntent().getIntExtra(FAVTYPE_KEY, -1);
         RelativeLayout contentView = (RelativeLayout)findViewById(R.id.content_view);
         mSearchModuelDeletage = new SearchModuleDelegate();
+        if(mFavType == 0){
+            mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.SET_HOME_TYPE);
+        } else if(mFavType == 1){
+            mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.SET_COMPANY_TYPE);
+
+        }
         mSearchModuelDeletage.bindParentDelegate(mSearchModuleParentDelegate);
         contentView.addView(mSearchModuelDeletage.getWidget(this));
 
         mSearchModuelDeletage.setFavAddressVisible(false);
 
-        mFavType = getIntent().getIntExtra(FAVTYPE_KEY, -1);
+
     }
 
     @Override

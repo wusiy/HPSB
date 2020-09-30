@@ -17,30 +17,27 @@ public class PoiListItemData {
     int type;
     com.amap.api.services.core.PoiItem poiItem;
 
-    private DecimalFormat disFormat = new DecimalFormat("0.0km");
+    private DecimalFormat disFormat = new DecimalFormat("0.000km");
 
     public String calDis(Location currLoc) {
         if (currLoc == null) {
             return "";
         }
-
         if (poiItem == null || poiItem.getLatLonPoint() == null) {
             return null;
         }
-
         Location location = new Location(currLoc);
         location.setLatitude(poiItem.getLatLonPoint().getLatitude());
         location.setLongitude(poiItem.getLatLonPoint().getLongitude());
 
         float distance = AMapUtil.calDistance(currLoc, location);
-
-        distance = distance / 1000;
-
-        if (distance < 0.1f) {
-            return null;
+        if (distance < 1000) {
+            DecimalFormat disFormat1 = new DecimalFormat("0m");
+            return disFormat1.format(distance);
+        } else{
+            distance = distance / 1000;
+            return disFormat.format(distance);
         }
-
-        return disFormat.format(distance);
     }
 
     public static int getHisData() {

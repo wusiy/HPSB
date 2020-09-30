@@ -1,9 +1,12 @@
 package com.sunland.cpocr.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -61,6 +64,7 @@ import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
+import com.sunland.cpocr.BuildConfig;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
 import com.sunland.cpocr.db.DbTracks;
@@ -74,6 +78,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 
 
 public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener,
@@ -98,8 +103,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     //标识，用于判断是否只显示一次定位信息和用户重新定位
     private boolean isFirstLoc = true;
     //当前定位经纬度
-    private double lat;
-    private double lgt;
+    public static double lat;
+    public static double lgt;
     //目的地点经纬度
     private double desLat;
     private double desLgt;
@@ -126,6 +131,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private Marker mlocMarker;
     private SearchModuleDelegate mSearchModuelDeletage;
     private String startType;
+    private Location loc;
 
     private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
     private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
@@ -273,6 +279,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 break;
 
             case R.id.navi:
+                if(lat != 0) {
+                    mSearchModuelDeletage.setCurrLoc(loc);
+                }
                 mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
                 break;
 
@@ -339,6 +348,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
                 lgt = aMapLocation.getLongitude();
+                loc = aMapLocation;
                 LatLng mylocation = new LatLng(aMapLocation.getLatitude(),
                         aMapLocation.getLongitude());
                 mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
@@ -605,7 +615,19 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mSearchModuelDeletage = new SearchModuleDelegate();
         mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.DEST_POI_TYPE);
         mSearchModuelDeletage.bindParentDelegate(mSearchModuleParentDelegate);
-//        contentView.addView(mSearchModuelDeletage.getWidget(this));
+        if(lat != 0) {
+            Location loc = null;
+            loc.setLatitude(lat);
+            loc.setLongitude(lgt);
+            mSearchModuelDeletage.setCurrLoc(loc);
+        }
+        SharedPreferences sp= getApplicationContext().getSharedPreferences("城市", Context.MODE_PRIVATE);
+        String cityName=sp.getString("city_name", "");
+        if(!cityName.equals("")){
+            Gson gson = new Gson();
+            CityModel cityModel = gson.fromJson(cityName, CityModel.class);
+            mSearchModuelDeletage.setCity(cityModel);
+        }
         re_c.addView(mSearchModuelDeletage.getWidget(this));
         mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
 
@@ -633,34 +655,30 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             showToast("取消成功");
         }
 
-        private void toSetFavAddressActivity(int type) {
-            Intent intent = new Intent();
-            intent.setClass(LprMapActivity.this, SetFavAddressActivity.class);
-            intent.putExtra(FAVTYPE_KEY, type);
-            Gson gson = new Gson();
-            intent.putExtra(SetFavAddressActivity.CURR_CITY_KEY, gson.toJson(mSearchModuelDeletage.getCurrCity()));
-            startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE);
-        }
+        //点击未设置地址的家按钮
         @Override
         public void onSetFavHomePoi() {
             showToast("设置家的地址");
             toSetFavAddressActivity(0);
         }
 
+        //点击未设置地址的公司按钮
         @Override
         public void onSetFavCompPoi() {
             showToast("设置公司地址");
             toSetFavAddressActivity(1);
         }
 
+        //点击已经设置地址的家按钮
         @Override
         public void onChooseFavHomePoi(com.amap.api.services.core.PoiItem poiItemData) {
-
+            clickFavHome(poiItemData);
         }
 
+        //点击已经设置地址的公司按钮
         @Override
         public void onChooseFavCompPoi(com.amap.api.services.core.PoiItem poiItem) {
-
+            clickFavComp(poiItem);
         }
 
         @Override
@@ -671,19 +689,83 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             desLgt = poiItem.getLatLonPoint().getLongitude();
             deslocation = poiItem.getTitle();
             chooseRoute();
-
-        }
-
-        private void saveToCache(PoiItem poiItem) {
-            PoiItemDBHelper.getInstance().savePoiItem(LprMapActivity.this, poiItem);
         }
     };
 
     private void showToast(String msg) {
-        //Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         if(msg.equals("取消成功")){
             mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
         }
+        else{
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void toSetFavAddressActivity(int type) {
+        Intent intent = new Intent();
+        intent.setClass(LprMapActivity.this, SetFavAddressActivity.class);
+        intent.putExtra(FAVTYPE_KEY, type);
+        Gson gson = new Gson();
+        intent.putExtra(SetFavAddressActivity.CURR_CITY_KEY, gson.toJson(mSearchModuelDeletage.getCurrCity()));
+        startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE);
+    }
+
+    private void saveToCache(PoiItem poiItem) {
+        PoiItemDBHelper.getInstance().savePoiItem(LprMapActivity.this, poiItem);
+    }
+
+    private void clickFavHome(com.amap.api.services.core.PoiItem poiItem){
+        final String items[] = {"重新设置家的地址", "导航至家"};
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("选择下一步操作")
+                .setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(which == 0){
+                            toSetFavAddressActivity(0);
+                        } else if(which == 1){
+                            saveToCache(poiItem);
+                            //showToast("选择了检索结果的 " + poiItem.getTitle() + poiItem.getLatLonPoint());
+                            desLat = poiItem.getLatLonPoint().getLatitude();
+                            desLgt = poiItem.getLatLonPoint().getLongitude();
+                            deslocation = poiItem.getTitle();
+                            chooseRoute();
+                        }
+                    }})
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
+        dialog.show();
+    }
+
+    private void clickFavComp(com.amap.api.services.core.PoiItem poiItem){
+        final String items[] = {"重新设置公司的地址", "导航至公司"};
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("选择下一步操作")
+                .setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(which == 0){
+                            toSetFavAddressActivity(1);
+                        } else if(which == 1){
+                            saveToCache(poiItem);
+                            //showToast("选择了检索结果的 " + poiItem.getTitle() + poiItem.getLatLonPoint());
+                            desLat = poiItem.getLatLonPoint().getLatitude();
+                            desLgt = poiItem.getLatLonPoint().getLongitude();
+                            deslocation = poiItem.getTitle();
+                            chooseRoute();
+                        }
+                    }})
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
+        dialog.show();
     }
 
     //开始路径选择
@@ -718,7 +800,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             int favType = data.getIntExtra(FAVTYPE_KEY, -1);
 
             PoiItem poiItem = new Gson().fromJson(poiitemStr, PoiItem.class);
-
             if (favType == 0) {
                 FavAddressUtil.saveFavHomePoi(this, poiItem);
                 mSearchModuelDeletage.setFavHomePoi(poiItem);
@@ -730,9 +811,14 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
         if (LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE == requestCode && resultCode == RESULT_OK) {
             String currCityStr = data.getStringExtra(CityChooseActivity.CURR_CITY_KEY);
+            SharedPreferences sp= getApplicationContext().getSharedPreferences("城市", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putString("city_name", currCityStr);
+            editor.commit();
             Gson gson = new Gson();
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
+
         }
 
 //        if (LPRMAP_ACTIVITY_START_NAVI_CODE == requestCode && resultCode == RESULT_OK) {

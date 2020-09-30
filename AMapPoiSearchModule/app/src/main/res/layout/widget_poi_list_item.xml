@@ -43,14 +43,14 @@
 
                 <TextView
                     android:id="@+id/dis_tv"
+                    android:text="-1 m"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:textSize="@dimen/suttitle_font_size"
-                    android:visibility="gone"
                     android:textColor="@color/normal_sub_title_color"
-                    ></TextView>
+                    />
 
                 <TextView
                     android:id="@+id/title_tv"

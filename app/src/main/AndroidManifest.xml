@@ -36,9 +36,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
-
-
-
     <application
         android:name="com.sunland.cpocr.MyApplication"
         android:allowBackup="true"

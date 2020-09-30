@@ -60,6 +60,10 @@ public class PoiSearchWidget extends RelativeLayout {
             mPoiInputTV.setHint("你从哪儿出发");
         } else if (poiType == IDelegate.DEST_POI_TYPE) {
             mPoiInputTV.setHint("你要去哪儿");
+        } else if (poiType == IDelegate.SET_HOME_TYPE){
+            mPoiInputTV.setHint("设置家的地址");
+        } else if(poiType == IDelegate.SET_COMPANY_TYPE){
+            mPoiInputTV.setHint("设置公司地址");
         }
     }
 
