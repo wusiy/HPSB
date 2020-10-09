@@ -87,6 +87,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     public static final String FAVTYPE_KEY = "favtype";
     public static final String POIITEM_STR_KEY = "poiitem_str";
     public static final String NAVI_TYPE_KEY = "navi";
+    public static final String IS_TRACING_KEY = "track";
 
     //AMap是地图对象
     private AMap aMap;
@@ -103,8 +104,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     //标识，用于判断是否只显示一次定位信息和用户重新定位
     private boolean isFirstLoc = true;
     //当前定位经纬度
-    public static double lat;
-    public static double lgt;
+    private double lat;
+    private double lgt;
     //目的地点经纬度
     private double desLat;
     private double desLgt;
@@ -114,6 +115,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private String deslocation;
     //是否开启轨迹追踪
     private boolean istracing = false;
+    //是否继续上次的轨迹录制
+    private boolean continue_tracing = false;
+    //上一次的巡逻轨迹记录
+    private PathRecord lastRecord;
     private PolylineOptions mPolyoptions;
     private Polyline mpolyline;
     private PathRecord record;
@@ -149,7 +154,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         if (aMap == null) {
             aMap = mapView.getMap();
         }
-
         aMap.setLoadOfflineData(false);
         aMap.setLoadOfflineData(true);
         //设置显示定位按钮 并且可以点击
@@ -163,40 +167,103 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
         mAMapNaviView.onCreate(savedInstanceState);
         mAMapNaviView.setAMapNaviViewListener(this);
-
         mAMapNavi = AMapNavi.getInstance(getApplicationContext());
         mAMapNavi.addAMapNaviListener(this);
         mAMapNavi.setUseInnerVoice(true);
 
         mTraceoverlay = new TraceOverlay(aMap);
+        initpolyline();
         initui();
         //开始定位
         location();
-        initpolyline();
     }
 
     private void initui(){
         if(startType.equals("")){
             mapView.setVisibility(View.VISIBLE);
             mAMapNaviView.setVisibility(View.INVISIBLE);
-        } else if(startType.equals("cal")){
+        } else if(startType.equals("cancle_navi")){ //路径规划时取消导航
             mapView.setVisibility(View.VISIBLE);
             mAMapNaviView.setVisibility(View.INVISIBLE);
-        } else if(startType.equals("false")){
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
+        } else if(startType.equals("false")){ //模拟导航
             mapView.setVisibility(View.INVISIBLE);
             mAMapNaviView.setVisibility(View.VISIBLE);
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
             mAMapNavi = AMapNavi.getInstance(getApplicationContext());
             mAMapNavi.addAMapNaviListener(this);
             mAMapNavi.setUseInnerVoice(true);
-            mAMapNavi.setEmulatorNaviSpeed(600);
+            mAMapNavi.setEmulatorNaviSpeed(60);
             mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
-        } else if(startType.equals("true")){
+        } else if(startType.equals("true")){ //实时导航
             mapView.setVisibility(View.INVISIBLE);
             mAMapNaviView.setVisibility(View.VISIBLE);
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
+            Log.d("CCCC", "AAA");
             mAMapNavi = AMapNavi.getInstance(getApplicationContext());
             mAMapNavi.addAMapNaviListener(this);
             mAMapNavi.setUseInnerVoice(true);
             mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
+        }
+    }
+
+    //绘制上次记录的巡逻轨迹并继续
+    private void continueTracing(){
+        DbTracks dbhelper = new DbTracks(this.getApplicationContext());
+        dbhelper.open();
+        lastRecord = dbhelper.queryLastRecord();
+        dbhelper.close();
+
+        mpolyline = null;
+        initpolyline();
+        if (record != null) {
+            record = null;
+        }
+        record = new PathRecord();
+        mStartTime = System.currentTimeMillis();
+        record.setDate(getcueDate(mStartTime));
+        aMap.clear(true);
+        Log.d("ZZZZZZ", "zz");
+        Log.d("ZZZZZZ", String.valueOf(lastRecord.getStartpoint().getLatitude()));
+        record.addpoint(lastRecord.getStartpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
+                lastRecord.getStartpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getStartpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
+        }
+
+        for(int i = 0; i < lastRecord.getPathline().size(); i++){
+            record.addpoint(lastRecord.getPathline().get(i));
+            mPolyoptions.add(new LatLng(lastRecord.getPathline().get(i).getLatitude(),
+                    lastRecord.getPathline().get(i).getLongitude()));
+            mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getPathline().get(i)));
+            redrawline();
+            if (mTracelocationlist.size() > tracesize - 1) {
+                trace();
+            }
+        }
+
+        record.addpoint(lastRecord.getEndpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getEndpoint().getLatitude(),
+                lastRecord.getEndpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getEndpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
         }
     }
 
@@ -234,13 +301,20 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.actionbar_activity_lprmap,menu);
+        Menu mMenu=menu;
+        MenuItem item =mMenu.findItem(R.id.recording_track);
+         if(continue_tracing){
+             Toast.makeText(getApplicationContext(),"正在继续上次的巡逻轨迹录制",Toast.LENGTH_LONG).show();
+             item.setIcon(getResources().getDrawable(R.drawable.stop));
+             istracing = true;
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
-            case R.id.recoeding_track:
+            case R.id.recording_track:
                 if(!istracing) {
                     Toast.makeText(getApplicationContext(),"轨迹开始录制",Toast.LENGTH_LONG).show();
                     item.setIcon(getResources().getDrawable(R.drawable.stop));
@@ -257,6 +331,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 } else{
                     item.setIcon(getResources().getDrawable(R.drawable.start1));
                     istracing = false;
+                    continue_tracing = false;
                     mEndTime = System.currentTimeMillis();
                     mOverlayList.add(mTraceoverlay);
                     //DecimalFormat decimalFormat = new DecimalFormat("0.0");
@@ -286,7 +361,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 break;
 
             case R.id.track_records:
-                Toast.makeText(getApplicationContext(),"跳转巡逻记录",Toast.LENGTH_SHORT).show();
                 Intent intent1;
                 intent1 = new Intent(LprMapActivity.this, CpRecordActivity.class);
                 startActivity(intent1);
@@ -340,10 +414,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                     //添加图钉
                     // aMap.addMarker(getMarkerOptions(amapLocation));
-                    Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
                     isFirstLoc = false;
                     mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-
                 }
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
@@ -364,7 +437,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                         trace();
                     }
                 }
-
             } else {
                 //显示错误信息ErrCode是错误码，errInfo是错误信息，详见错误码表。
                 Log.e("AmapError", "location Error, ErrCode:"
@@ -387,6 +459,13 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             AMapLocation lastLocaiton = list.get(list.size() - 1);
             String stratpoint = amapLocationToString(firstLocaiton);
             String endpoint = amapLocationToString(lastLocaiton);
+            if(continue_tracing){
+                DbHepler.deleteLastTrack();
+                 duration = String.valueOf(Long.valueOf(getDuration()) + Long.valueOf(lastRecord.getDuration()));
+                 distance = getDistance(list) + Float.parseFloat(lastRecord.getDistance());
+                 average = String.valueOf(distance / Long.valueOf(getDuration()) + Long.valueOf(lastRecord.getDuration()) * 1000f);
+                 stratpoint = amapLocationToString(lastRecord.getStartpoint());
+            }
             DbHepler.createrecord(String.valueOf(distance), duration, average,
                     pathlineSring, stratpoint, endpoint, time);
             DbHepler.close();
@@ -508,7 +587,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     public void onFinished(int lineID, List<LatLng> linepoints, int distance, int waitingtime) {
         if (lineID == 1) {
             if (linepoints != null && linepoints.size()>0) {
-
             }
         } else if (lineID == 2) {
             if (linepoints != null && linepoints.size()>0) {
@@ -517,7 +595,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                         .width(40).addAll(linepoints));
             }
         }
-
     }
 
     /**
@@ -575,7 +652,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     @Override
     public void activate(OnLocationChangedListener listener) {
         mListener = listener;
-
     }
 
     @Override
@@ -584,7 +660,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         if (mLocationClient != null) {
             mLocationClient.stopLocation();
             mLocationClient.onDestroy();
-
         }
         mLocationClient = null;
     }
@@ -784,10 +859,20 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                 Intent intent;
                                 intent = new Intent(LprMapActivity.this, CalculateRouteActivity.class);
                                 intent.putExtras(bundle);
+                                continue_tracing = false;
+                                if(istracing){
+                                    intent.putExtra(IS_TRACING_KEY, "true");
+                                    mEndTime = System.currentTimeMillis();
+                                    mOverlayList.add(mTraceoverlay);
+                                    LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
+                                    mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, LprMapActivity.this);
+                                    saveRecord(record.getPathline(), record.getDate());
+                                } else{
+                                    intent.putExtra(IS_TRACING_KEY, "false");
+                                }
                                 //startActivityForResult(intent, LPRMAP_ACTIVITY_START_NAVI_CODE);
                                 startActivity(intent);
                                 finish();
-
                             }
                         });
                 builder.show();
@@ -868,7 +953,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         if(keyCode==KeyEvent.KEYCODE_BACK){
             if(mSearchModuelDeletage.getWidget(this).getVisibility() ==  View.VISIBLE){
                 mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
-            } else{
+            } else if(mAMapNaviView.getVisibility() == View.VISIBLE){
+                onNaviCancel();
+            } else {
                 super.onKeyDown(keyCode, event);
             }
         }
@@ -951,7 +1038,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     @Override
     public void onNaviCancel() {
-        finish();
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
     }
 
     @Override

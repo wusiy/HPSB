@@ -34,12 +34,9 @@ public class CpRecordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cp_records);
-
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
-//            actionBar.setHomeButtonEnabled(true);
-//            actionBar.setDisplayHomeAsUpEnabled(true);
         }
         iv_cp = (ImageView) findViewById(R.id.iv_cp);
         recyclerView_cphm = (RecyclerView) findViewById(R.id.recycler_cplist);
@@ -71,10 +68,7 @@ public class CpRecordActivity extends AppCompatActivity {
                 DbHepler.open();
                 String record = DbHepler.queryRecordByCarNum(cphm);
                 DbHepler.close();
-                Log.d("WWW", cphm + "  " + record);
-
                 String[] splitZp= record.split("\\|");
-
                 CpzpAdapter cpzpAdapter = new CpzpAdapter(splitZp);
                 cpzpAdapter.setScrollTargetPositionListener(new CpzpAdapter.OnScrollTargetPositionListener() {
                     @Override
@@ -97,18 +91,17 @@ public class CpRecordActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
                         Bitmap bitmap  = BitmapFactory.decodeStream(fis);
+                        iv_cp.setVisibility(View.VISIBLE);
                         iv_cp.setImageBitmap(bitmap);
                     }
-
                 });
-
                 recyclerView_cpzp.setAdapter(cpzpAdapter);
                 cpzpAdapter.add_all_zp(splitZp);
+                iv_cp.setVisibility(View.INVISIBLE);
             }
         });
 
         recyclerView_cphm.setAdapter(cphmAdapter);
         cphmAdapter.add_all_hphm(cphm);
-
     }
 }

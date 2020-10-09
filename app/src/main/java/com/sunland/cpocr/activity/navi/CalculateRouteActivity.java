@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.sunland.cpocr.activity.LprMapActivity.IS_TRACING_KEY;
 import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
 
 /**
@@ -63,7 +64,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
      * 导航对象(单例)
      */
     private AMapNavi mAMapNavi;
-
     private MapView mMapView;
     private AMap mAMap;
     private NaviLatLng endLatlng = new NaviLatLng(39.90759,116.392582);
@@ -96,8 +96,9 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     private TextView mCalculateRouteOverView;
     private ImageView mImageTraffic, mImageStrategy;
     private ProgressDialog dialog;
-
     private int routeID = -1;
+    //是否记录巡逻轨迹
+    private String istracing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +110,7 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         Bundle bundle = this.getIntent().getExtras(); //读取intent的数据给bundle对象
         startLatlng = new NaviLatLng(bundle.getDouble("lat"),bundle.getDouble("lgt"));
         endLatlng = new NaviLatLng(bundle.getDouble("deslat"), bundle.getDouble("deslgt"));
+        istracing = getIntent().getStringExtra(IS_TRACING_KEY);
 
         mMapView = (MapView) findViewById(R.id.navi_view);
         mMapView.onCreate(savedInstanceState);// 此方法必须重写
@@ -188,7 +190,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         endList.add(endLatlng);
         mAMapNavi = AMapNavi.getInstance(getApplicationContext());
         mAMapNavi.addAMapNaviListener(this);
-
     }
 
     private void initView() {
@@ -268,7 +269,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
 //            startActivity(gpsintent);
 
             Intent intent = new Intent(CalculateRouteActivity.this, LprMapActivity.class);
-
             final String items[] = {"模拟导航", "实时导航"};
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setTitle("选择导航方式")
@@ -277,14 +277,13 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
                         public void onClick(DialogInterface dialog, int which) {
                             if(which == 0){
                                 intent.putExtra(NAVI_TYPE_KEY, "false");
+                                intent.putExtra(IS_TRACING_KEY, istracing);
                                 startActivity(intent);
-
                             } else if(which == 1){
                                 intent.putExtra(NAVI_TYPE_KEY, "true");
+                                intent.putExtra(IS_TRACING_KEY, istracing);
                                 startActivity(intent);
-                              ;
                             }
-
                         }
                     })
                     .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -294,13 +293,11 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
                         }
                     }).create();
             dialog.show();
-
         } else{
             Intent intent = new Intent();
-            intent.putExtra(NAVI_TYPE_KEY, "cal");
+            intent.putExtra(NAVI_TYPE_KEY, "cancel_cal");
             startActivity(intent);
         }
-
     }
 
     /**
@@ -386,7 +383,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
             visiableRouteLine(true, true, true);
             focuseRouteLine(true, false, false);
         }
-
     }
 
     private void visiableRouteLine(boolean lineOne, boolean lineTwo, boolean lineThree) {
@@ -818,7 +814,8 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode==KeyEvent.KEYCODE_BACK){
             Intent intent= new Intent(CalculateRouteActivity.this, LprMapActivity.class);
-            intent.putExtra(NAVI_TYPE_KEY, "cal");
+            intent.putExtra(NAVI_TYPE_KEY, "cancle_navi");
+            intent.putExtra(IS_TRACING_KEY, istracing);
             startActivity(intent);
         }
         return true;

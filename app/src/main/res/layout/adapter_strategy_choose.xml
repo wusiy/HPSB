@@ -17,10 +17,11 @@
 
     <ImageView
         android:id="@+id/strategy_choose_flag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="90dp"
+        android:layout_height="60dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:scaleType="centerInside"
         android:background="@drawable/prefer_setting_btn_off"
         android:clickable="false" />
 </RelativeLayout>

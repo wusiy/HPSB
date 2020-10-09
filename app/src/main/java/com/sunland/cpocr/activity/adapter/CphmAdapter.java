@@ -18,7 +18,7 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
     private List<String> mData = new ArrayList<>();
     private OnScrollTargetPositionListener listener;
     private List<String> mContext;
-   private OnItemOnClickListener mOnItemOnClickListener;
+    private OnItemOnClickListener mOnItemOnClickListener;
 
     public CphmAdapter(List<String> mContext) {
         this.mContext = mContext;
@@ -44,7 +44,6 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
         return vh;
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
         position = viewHolder.getAdapterPosition();
@@ -54,7 +53,6 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
         }
 
         viewHolder.tvCphm.setText(info);
-
 
             if (mOnItemOnClickListener != null) {
                 int finalPosition1 = position;
@@ -107,7 +105,6 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
         }
     }
 
-
             @Override
             public int getItemCount () {
                 return mData.size();
@@ -115,8 +112,6 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
 
             static class ViewHolder extends RecyclerView.ViewHolder {
                 public TextView tvCphm;
-
-
                 public ViewHolder(@NonNull View itemView) {
                     super(itemView);
                     tvCphm = (TextView) itemView.findViewById(R.id.tv_cphm);
@@ -126,9 +121,6 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
 
             public interface OnItemOnClickListener {
                 void onItemLongClock(View view, int pos);
-
                 void onItemDetailBtnClick(View view, String cphm);
             }
-
-
 }

@@ -7,7 +7,9 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
+import com.sunland.cpocr.activity.navi.StrategyChooseActivity;
 import com.sunland.cpocr.path_record.record.PathRecord;
 import com.sunland.cpocr.path_record.recorduitl.Util;
 
@@ -117,6 +119,17 @@ public class DbTracks {
 	}
 
 	/**
+	 * 删除最后一条数据
+	 * @return
+	 */
+	public long deleteLastTrack( ) {
+		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
+				null, null, null, null);
+		int mRecordItemId = allRecordCursor.getCount();
+		return db.delete(RECORD_TABLE, "id=?", new String[] { String.valueOf(mRecordItemId)});
+	}
+
+	/**
 	 * 查询所有轨迹记录
 	 * 
 	 * @return
@@ -157,6 +170,40 @@ public class DbTracks {
 	 * @return
 	 */
 	public PathRecord queryRecordById(int mRecordItemId) {
+		String where = KEY_ROWID + "=?";
+		String[] selectionArgs = new String[] { String.valueOf(mRecordItemId) };
+		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
+				selectionArgs, null, null, null);
+		PathRecord record = new PathRecord();
+		if (cursor.moveToNext()) {
+			record.setId(cursor.getInt(cursor
+					.getColumnIndex(DbTracks.KEY_ROWID)));
+			record.setDistance(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DISTANCE)));
+			record.setDuration(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DURATION)));
+			record.setDate(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DATE)));
+			String lines = cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_LINE));
+			record.setPathline(Util.parseLocations(lines));
+			record.setStartpoint(Util.parseLocation(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STRAT))));
+			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_END))));
+		}
+		return record;
+	}
+
+	/**
+	 * 获取最后一条记录
+	 *
+	 * @return
+	 */
+	public PathRecord queryLastRecord() {
+		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
+				null, null, null, null);
+		int mRecordItemId = allRecordCursor.getCount();
 		String where = KEY_ROWID + "=?";
 		String[] selectionArgs = new String[] { String.valueOf(mRecordItemId) };
 		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
