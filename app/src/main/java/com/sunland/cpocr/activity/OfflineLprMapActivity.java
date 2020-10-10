@@ -1,9 +1,8 @@
 package com.sunland.cpocr.activity;
 
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,9 +12,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +27,6 @@ import androidx.core.app.ActivityCompat;
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
-import com.amap.api.location.AMapLocationListener;
 
 import com.amap.api.location.CoordinateConverter;
 import com.amap.api.location.DPoint;
@@ -40,7 +36,6 @@ import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
-import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
@@ -48,25 +43,9 @@ import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.navi.AMapNavi;
-import com.amap.api.navi.AMapNaviListener;
 import com.amap.api.navi.AMapNaviView;
-import com.amap.api.navi.AMapNaviViewListener;
-import com.amap.api.navi.model.AMapCalcRouteResult;
-import com.amap.api.navi.model.AMapLaneInfo;
-import com.amap.api.navi.model.AMapModelCross;
-import com.amap.api.navi.model.AMapNaviCameraInfo;
-import com.amap.api.navi.model.AMapNaviCross;
-import com.amap.api.navi.model.AMapNaviInfo;
-import com.amap.api.navi.model.AMapNaviLocation;
-import com.amap.api.navi.model.AMapNaviRouteNotifyData;
-import com.amap.api.navi.model.AMapNaviTrafficFacilityInfo;
-import com.amap.api.navi.model.AMapServiceAreaInfo;
-import com.amap.api.navi.model.AimLessModeCongestionInfo;
-import com.amap.api.navi.model.AimLessModeStat;
-import com.amap.api.navi.model.NaviInfo;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.trace.LBSTraceClient;
-import com.amap.api.trace.TraceListener;
 import com.amap.api.trace.TraceLocation;
 import com.amap.api.trace.TraceOverlay;
 import com.amap.poisearch.searchmodule.ISearchModule;
@@ -74,9 +53,7 @@ import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
-import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
-import com.sunland.cpocr.BuildConfig;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
 import com.sunland.cpocr.db.DbTracks;
@@ -85,14 +62,13 @@ import com.sunland.cpocr.path_record.recorduitl.Util;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 
-public class T1 extends BaseOcrActivity {
+public class OfflineLprMapActivity extends BaseOcrActivity {
 
     public static final String FAVTYPE_KEY = "favtype";
     public static final String POIITEM_STR_KEY = "poiitem_str";
@@ -153,10 +129,16 @@ public class T1 extends BaseOcrActivity {
     private static int LPRMAP_ACTIVITY_START_NAVI_CODE = 3;
     private LocationManager locationManager;
     private String locationProvider;
+    private Marker marker;
+    private ProgressDialog dialog;
+    private boolean showDialog;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        showDialog = true;
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("正在GPS定位...(请到GPS信号强的地方如室外开阔处以加速定位)");
+        dialog.show();
 
         lat = 0;
         actionBar.setTitle("");
@@ -171,23 +153,10 @@ public class T1 extends BaseOcrActivity {
         aMap.setLoadOfflineData(true);
         mTraceoverlay = new TraceOverlay(aMap);
         initpolyline();
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-
         init();
                     // 通过监听器监听GPS提供的定位信息的改变
-                    if (ActivityCompat.checkSelfPermission(T1.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(T1.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // TODO: Consider calling
                         //    ActivityCompat#requestPermissions
                         // here to request the missing permissions, and then overriding
@@ -201,6 +170,10 @@ public class T1 extends BaseOcrActivity {
                         @Override
                         public void onLocationChanged(Location loc) {
                             // 使用GPS提供的定位信息来更新位置
+                            if(showDialog){
+                                dialog.dismiss();
+                                showDialog = false;
+                            }
                             updatePosition(loc);
                             if (istracing) {
                                 LatLng mylocation = new LatLng(fromGpsToAmap(loc).getLatitude(),
@@ -224,7 +197,7 @@ public class T1 extends BaseOcrActivity {
                         @Override
                         public void onProviderEnabled(String provider) {
                             // 使用GPS提供的定位信息来更新位置
-                            if (ActivityCompat.checkSelfPermission(T1.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(T1.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 // TODO: Consider calling
                                 //    ActivityCompat#requestPermissions
                                 // here to request the missing permissions, and then overriding
@@ -265,7 +238,10 @@ public class T1 extends BaseOcrActivity {
         // 更新地图的显示区域
         aMap.moveCamera(cu);
         // 清除所有Marker等覆盖物
-        aMap.clear();
+        //aMap.clear();
+        if(marker != null){
+            marker.remove();
+        }
         // 创建一个MarkerOptions对象
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(pos);
@@ -273,7 +249,7 @@ public class T1 extends BaseOcrActivity {
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.point5));
         markerOptions.draggable(true);
         // 添加MarkerOptions（实际上是添加Marker）
-        Marker marker = aMap.addMarker(markerOptions);
+        marker = aMap.addMarker(markerOptions);
     }
 
     private void initpolyline() {
@@ -341,7 +317,7 @@ public class T1 extends BaseOcrActivity {
 
             case R.id.tracks:
                 Intent intent;
-                intent = new Intent(T1.this, TrackRecordActivity.class);
+                intent = new Intent(OfflineLprMapActivity.this, TrackRecordActivity.class);
                 startActivity(intent);
                 break;
 
@@ -354,7 +330,7 @@ public class T1 extends BaseOcrActivity {
 
             case R.id.track_records:
                 Intent intent1;
-                intent1 = new Intent(T1.this, CpRecordActivity.class);
+                intent1 = new Intent(OfflineLprMapActivity.this, CpRecordActivity.class);
                 startActivity(intent1);
                 break;
 
@@ -383,7 +359,7 @@ public class T1 extends BaseOcrActivity {
             DbHepler.close();
             Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + distance + "m",Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(com.sunland.cpocr.activity.T1.this, "没有记录到路径", Toast.LENGTH_SHORT)
+            Toast.makeText(OfflineLprMapActivity.this, "没有记录到路径", Toast.LENGTH_SHORT)
                     .show();
         }
     }
@@ -465,7 +441,7 @@ public class T1 extends BaseOcrActivity {
     }
 
     public void record(View view) {
-        Intent intent = new Intent(com.sunland.cpocr.activity.T1.this, TrackRecordActivity.class);
+        Intent intent = new Intent(OfflineLprMapActivity.this, TrackRecordActivity.class);
         startActivity(intent);
     }
 
@@ -608,9 +584,9 @@ public class T1 extends BaseOcrActivity {
         public void onChangeCityName() {
             showToast("选择城市");
             Intent intent = new Intent();
-            intent.setClass(T1.this, CityChooseActivity.class);
+            intent.setClass(OfflineLprMapActivity.this, CityChooseActivity.class);
             intent.putExtra(CityChooseActivity.CURR_CITY_KEY, mSearchModuelDeletage.getCurrCity().getCity());
-            T1.this.startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE);
+            OfflineLprMapActivity.this.startActivityForResult(intent, LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE);
         }
 
         @Override
@@ -666,7 +642,7 @@ public class T1 extends BaseOcrActivity {
 
     private void toSetFavAddressActivity(int type) {
         Intent intent = new Intent();
-        intent.setClass(T1.this, SetFavAddressActivity.class);
+        intent.setClass(OfflineLprMapActivity.this, SetFavAddressActivity.class);
         intent.putExtra(FAVTYPE_KEY, type);
         Gson gson = new Gson();
         intent.putExtra(SetFavAddressActivity.CURR_CITY_KEY, gson.toJson(mSearchModuelDeletage.getCurrCity()));
@@ -674,7 +650,7 @@ public class T1 extends BaseOcrActivity {
     }
 
     private void saveToCache(PoiItem poiItem) {
-        PoiItemDBHelper.getInstance().savePoiItem(T1.this, poiItem);
+        PoiItemDBHelper.getInstance().savePoiItem(OfflineLprMapActivity.this, poiItem);
     }
 
     private void clickFavHome(com.amap.api.services.core.PoiItem poiItem){
@@ -735,7 +711,7 @@ public class T1 extends BaseOcrActivity {
     private void chooseRoute(){
         mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
 
-        AlertDialog.Builder builder = DialogHelp.getConfirmDialog(T1.this,
+        AlertDialog.Builder builder = DialogHelp.getConfirmDialog(OfflineLprMapActivity.this,
                 "是否由 " + location + " 导航至 " + deslocation, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -745,7 +721,7 @@ public class T1 extends BaseOcrActivity {
                         bundle.putDouble("deslat", desLat);
                         bundle.putDouble("deslgt", desLgt);
                         Intent intent;
-                        intent = new Intent(T1.this, CalculateRouteActivity.class);
+                        intent = new Intent(OfflineLprMapActivity.this, CalculateRouteActivity.class);
                         intent.putExtras(bundle);
                         continue_tracing = false;
                         if(istracing){

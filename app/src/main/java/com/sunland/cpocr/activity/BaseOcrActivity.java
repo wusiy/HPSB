@@ -321,9 +321,13 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         if ("P990-XD(7.0)".equalsIgnoreCase(Build.MODEL)) {
             nRet = api.init(this, preWidth - m_ROI[2], m_ROI[1], preWidth - m_ROI[0], m_ROI[3], preWidth, preHeight);
             rotateFlag = 3;
-        } else {
-            nRet = api.init(this, m_ROI[0], m_ROI[1], m_ROI[2], m_ROI[3], preWidth, preHeight);
-            rotateFlag = 0;
+        } else if("P999-XD".equalsIgnoreCase(Build.MODEL)) {
+            nRet = api.init(this, preWidth - m_ROI[2], preHeight - m_ROI[3],  preWidth - m_ROI[0], preHeight - m_ROI[1], preWidth, preHeight);
+            rotateFlag = 3;
+        } else
+         {
+            nRet = api.init(this, preHeight - m_ROI[2], m_ROI[1], preHeight - m_ROI[0], m_ROI[3], preWidth, preHeight);
+            rotateFlag = 3;
         }
         return nRet;
     }
