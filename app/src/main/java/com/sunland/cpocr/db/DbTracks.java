@@ -122,11 +122,15 @@ public class DbTracks {
 	 * 删除最后一条数据
 	 * @return
 	 */
-	public long deleteLastTrack( ) {
+	public boolean deleteLastTrack( ) {
 		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
 				null, null, null, null);
-		int mRecordItemId = allRecordCursor.getCount();
-		return db.delete(RECORD_TABLE, "id=?", new String[] { String.valueOf(mRecordItemId)});
+		int mRecordItemId = allRecordCursor.getCount() ;
+		Log.d("QQQ", mRecordItemId + "zz");
+		long b = (int)mRecordItemId;
+		return db.delete(RECORD_TABLE, "id=?", new String[] { String.valueOf(mRecordItemId)}) > 0;
+		//return db.delete(RECORD_TABLE, "id=" + b, null) > 0;
+
 	}
 
 	/**
@@ -201,32 +205,83 @@ public class DbTracks {
 	 * @return
 	 */
 	public PathRecord queryLastRecord() {
+//		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
+//				null, null, null, null);
+//		int mRecordItemId = allRecordCursor.getCount();
+//		String where = KEY_ROWID + "=?";
+//		String[] selectionArgs = new String[] { String.valueOf(mRecordItemId) };
+//		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
+//				selectionArgs, null, null, null);
+//		PathRecord record = new PathRecord();
+//		if (cursor.moveToNext()) {
+//			record.setId(cursor.getInt(cursor
+//					.getColumnIndex(DbTracks.KEY_ROWID)));
+//			record.setDistance(cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_DISTANCE)));
+//			record.setDuration(cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_DURATION)));
+//			record.setDate(cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_DATE)));
+//			String lines = cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_LINE));
+//			record.setPathline(Util.parseLocations(lines));
+//			record.setStartpoint(Util.parseLocation(cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_STRAT))));
+//			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
+//					.getColumnIndex(DbTracks.KEY_END))));
+//		}
+//		return record;
+		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
+				null, null, null, null);
+		PathRecord record = new PathRecord();
+		while (allRecordCursor.moveToNext()) {
+
+			record.setId(allRecordCursor.getInt(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_ROWID)));
+			record.setDistance(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_DISTANCE)));
+			record.setDuration(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_DURATION)));
+			record.setDate(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_DATE)));
+			String lines = allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_LINE));
+			record.setPathline(Util.parseLocations(lines));
+			record.setStartpoint(Util.parseLocation(allRecordCursor
+					.getString(allRecordCursor
+							.getColumnIndex(DbTracks.KEY_STRAT))));
+			record.setEndpoint(Util.parseLocation(allRecordCursor
+					.getString(allRecordCursor
+							.getColumnIndex(DbTracks.KEY_END))));
+		}
+		return record;
+	}
+
+	/**
+	 * 更新最后一条数据
+
+	 * @return
+	 */
+	public long updatelastrecord(String distance, String duration,
+							 String averagespeed, String pathline, String stratpoint,
+							 String endpoint, String date) {
+
 		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
 				null, null, null, null);
 		int mRecordItemId = allRecordCursor.getCount();
-		String where = KEY_ROWID + "=?";
-		String[] selectionArgs = new String[] { String.valueOf(mRecordItemId) };
-		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
-				selectionArgs, null, null, null);
-		PathRecord record = new PathRecord();
-		if (cursor.moveToNext()) {
-			record.setId(cursor.getInt(cursor
-					.getColumnIndex(DbTracks.KEY_ROWID)));
-			record.setDistance(cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_DISTANCE)));
-			record.setDuration(cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_DURATION)));
-			record.setDate(cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_DATE)));
-			String lines = cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_LINE));
-			record.setPathline(Util.parseLocations(lines));
-			record.setStartpoint(Util.parseLocation(cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_STRAT))));
-			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
-					.getColumnIndex(DbTracks.KEY_END))));
-		}
-		return record;
+		Log.e("AAA",mRecordItemId + "z");
+		ContentValues args = new ContentValues();
+		args.put("distance", distance);
+		args.put("duration", duration);
+		args.put("averagespeed", averagespeed);
+		args.put("pathline", pathline);
+		args.put("stratpoint", stratpoint);
+		args.put("endpoint", endpoint);
+		args.put("date", date);
+//		return db.update(RECORD_TABLE, args, "id=?",new String[]{String.valueOf(mRecordItemId)});
+ 		long b = (int)mRecordItemId;
+		//return db.delete(RECORD_TABLE, "id=?", new String[] { String.valueOf(mRecordItemId)});
+		return db.update(RECORD_TABLE, args,"id=" + b, null) ;
 	}
 
 	private String[] getColumns() {

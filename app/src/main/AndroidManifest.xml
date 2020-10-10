@@ -117,6 +117,12 @@
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
             android:screenOrientation="reverseLandscape"  />
 
+        <activity
+            android:name=".activity.T1"
+            android:label="@string/app_name"
+            android:screenOrientation="reverseLandscape" >
+        </activity>
+
 
     </application>
 
