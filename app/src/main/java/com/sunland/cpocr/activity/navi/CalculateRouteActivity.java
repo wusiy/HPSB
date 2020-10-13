@@ -4,7 +4,10 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -20,8 +23,10 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
+import com.amap.api.maps.model.LatLng;
 import com.amap.api.navi.AMapNavi;
 import com.amap.api.navi.AMapNaviListener;
+import com.amap.api.navi.enums.TravelStrategy;
 import com.amap.api.navi.model.AMapCalcRouteResult;
 import com.amap.api.navi.model.AMapLaneInfo;
 import com.amap.api.navi.model.AMapModelCross;
@@ -37,14 +42,19 @@ import com.amap.api.navi.model.AimLessModeCongestionInfo;
 import com.amap.api.navi.model.AimLessModeStat;
 import com.amap.api.navi.model.NaviInfo;
 import com.amap.api.navi.model.NaviLatLng;
+import com.amap.api.navi.model.NaviPoi;
 import com.amap.api.navi.view.RouteOverLay;
 
+import com.amap.poisearch.util.AMapUtil;
 import com.autonavi.tbt.TrafficFacilityInfo;
+import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.LprMapActivity;
+import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import com.sunland.cpocr.bean.StrategyBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -93,25 +103,25 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     private TextView mRouteTextStrategyOne, mRouteTextStrategyTwo, mRouteTextStrategyThree;
     private TextView mRouteTextTimeOne, mRouteTextTimeTwo, mRouteTextTimeThree;
     private TextView mRouteTextDistanceOne, mRouteTextDistanceTwo, mRouteTextDistanceThree;
-    private TextView mCalculateRouteOverView;
-    private ImageView mImageTraffic, mImageStrategy;
+    private TextView mCalculateRouteOverView, naviWay;
+    private ImageView mImageTraffic, mImageStrategy, mImageNaviWay;
     private ProgressDialog dialog;
     private int routeID = -1;
     //是否记录巡逻轨迹
     private String istracing;
+    //起末两点距离
+    private double distance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculate_route);
-        dialog = new ProgressDialog(this);
-        dialog.setMessage("正在规划路径...");
-        dialog.show();
+
         Bundle bundle = this.getIntent().getExtras(); //读取intent的数据给bundle对象
         startLatlng = new NaviLatLng(bundle.getDouble("lat"),bundle.getDouble("lgt"));
         endLatlng = new NaviLatLng(bundle.getDouble("deslat"), bundle.getDouble("deslgt"));
         istracing = getIntent().getStringExtra(IS_TRACING_KEY);
-
+        distance = getDistance(startLatlng.getLongitude(), startLatlng.getLatitude(), endLatlng.getLongitude(), endLatlng.getLatitude());
         mMapView = (MapView) findViewById(R.id.navi_view);
         mMapView.onCreate(savedInstanceState);// 此方法必须重写
         initView();
@@ -140,6 +150,32 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
             case R.id.strategy_choose:
                 strategyChoose();
                 break;
+            case R.id.navi_way:
+                final String items[] = {"驾车", "骑行", "步行"};
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("选择出行方式")
+                        .setItems(items, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if(which == 0){
+                                    mImageStrategy.setVisibility(View.VISIBLE);
+                                    mImageNaviWay.setImageResource(R.drawable.drive);
+                                    naviWay.setText("驾车");
+                                    calculateDriveRoute();
+                                } else if(which == 1){
+                                    calculateRideRoute();
+                                } else if(which == 2){
+                                  calculateWalkRoute();
+                                }
+                            }
+                        })
+                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).create();
+                dialog.show();
             default:
                 break;
         }
@@ -150,12 +186,49 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
      * 驾车路径规划计算
      */
     private void calculateDriveRoute() {
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("正在规划路径...");
+        dialog.show();
         try {
             strategyFlag = mAMapNavi.strategyConvert(mStrategyBean.isCongestion(), mStrategyBean.isCost(), mStrategyBean.isAvoidhightspeed(), mStrategyBean.isHightspeed(), true);
         } catch (Exception e) {
             e.printStackTrace();
         }
         mAMapNavi.calculateDriveRoute(startList, endList, wayList, strategyFlag);
+    }
+
+    /**
+     * 骑行路径规划计算
+     */
+    private void calculateRideRoute() {
+        if(distance < 1000) {
+            dialog = new ProgressDialog(this);
+            dialog.setMessage("正在规划路径...");
+            dialog.show();
+            mImageStrategy.setVisibility(View.INVISIBLE);
+            mImageNaviWay.setImageResource(R.drawable.ride);
+            naviWay.setText("骑行");
+            mAMapNavi.calculateRideRoute(startLatlng, endLatlng);
+        } else{
+            Toast.makeText(this,"距离超过1000KM，路线规划失败",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 步行路径规划计算
+     */
+    private void calculateWalkRoute() {
+        if(distance < 5) {
+            dialog = new ProgressDialog(this);
+            dialog.setMessage("正在规划路径...");
+            dialog.show();
+            mImageStrategy.setVisibility(View.INVISIBLE);
+            mImageNaviWay.setImageResource(R.drawable.walk2);
+            naviWay.setText("步行");
+            mAMapNavi.calculateWalkRoute(startLatlng, endLatlng);
+        } else{
+            Toast.makeText(this,"距离超过5KM，路线规划失败",Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -200,7 +273,10 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
         mImageTraffic.setOnClickListener(this);
         mImageStrategy = (ImageView) findViewById(R.id.strategy_choose);
         mImageStrategy.setOnClickListener(this);
+        mImageNaviWay = (ImageView) findViewById(R.id.navi_way);
+        mImageNaviWay.setOnClickListener(this);
 
+        naviWay = (TextView) findViewById(R.id.navi_way_text);
         mCalculateRouteOverView = (TextView) findViewById(R.id.calculate_route_navi_overview);
 
         mRouteLineLayoutOne = (LinearLayout) findViewById(R.id.route_line_one);
@@ -819,5 +895,20 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
             startActivity(intent);
         }
         return true;
+    }
+
+    private static final double EARTH_RADIUS = 6378137.0;
+    public static double getDistance(double longitude,double latitue,double longitude2,double latitue2){
+        double lat1 = rad(latitue);
+        double lat2 = rad(latitue2);
+        double a = lat1 - lat2;
+        double b = rad(longitude)-rad(longitude2);
+        double s = 2*Math.asin(Math.sqrt(Math.pow(Math.sin(a/2),2)+Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin(b/2),2)));
+        s=s*EARTH_RADIUS;
+        s=Math.round(s*10000)/10000;
+        return s/1000;
+    }
+    private static double rad(double d){
+        return d*Math.PI/180.0;
     }
 }

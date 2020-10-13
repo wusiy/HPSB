@@ -59,6 +59,7 @@ import com.amap.api.trace.TraceLocation;
 import com.amap.api.trace.TraceOverlay;
 import com.amap.poisearch.searchmodule.ISearchModule;
 import com.amap.poisearch.searchmodule.SearchModuleDelegate;
+import com.amap.poisearch.util.AMapUtil;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
@@ -982,10 +983,14 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     @Override
     public void onEndEmulatorNavi() {
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
     }
 
     @Override
     public void onArriveDestination() {
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -1013,6 +1018,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     @Override
     public void onNaviSetting() {
+        Toast.makeText(this,"全蓝", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -1028,6 +1034,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     @Override
     public void onNaviTurnClick() {
+        Toast.makeText(this,"左上角转向", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -1154,6 +1161,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     @Override
     public void onGpsSignalWeak(boolean b) {
+        if(b){
+            Toast.makeText(this,"GPS信号弱", Toast.LENGTH_SHORT).show();
+        }
 
     }
 

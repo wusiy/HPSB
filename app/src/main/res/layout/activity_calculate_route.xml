@@ -189,6 +189,28 @@
             android:scaleType="centerInside"
             android:src="@drawable/map_traffic_hl_white" />
 
+        <ImageView
+            android:id="@+id/navi_way"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorDark"
+            android:clickable="true"
+            android:scaleType="centerInside"
+            android:src="@drawable/drive" />
+        <TextView
+            android:id="@+id/navi_way_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="12.5dp"
+            android:layout_marginTop="40dp"
+            android:text="驾车"/>
+
     </RelativeLayout>
 
 </RelativeLayout>
