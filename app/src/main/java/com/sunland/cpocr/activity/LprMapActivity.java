@@ -452,11 +452,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             AMapLocation lastLocaiton = list.get(list.size() - 1);
             String stratpoint = amapLocationToString(firstLocaiton);
             String endpoint = amapLocationToString(lastLocaiton);
-            Log.d("TTT", "zzz11");
             if(continue_tracing){
-//                 duration = String.valueOf(Long.valueOf(getDuration()) + Long.valueOf(lastRecord.getDuration()));
-//                 distance = getDistance(list) + Float.parseFloat(lastRecord.getDistance());
-//                 average = String.valueOf(distance / Long.valueOf(getDuration()) + Long.valueOf(lastRecord.getDuration()) * 1000f);
+                 duration = String.valueOf(Double.parseDouble(duration.trim()) + Double.valueOf(lastRecord.getDuration()));
+                 distance = getDistance(list) + Float.parseFloat(lastRecord.getDistance());
+                 average = String.valueOf(distance / Double.valueOf(getDuration()) + Double.valueOf(lastRecord.getDuration()) * 1000f);
                  stratpoint = amapLocationToString(lastRecord.getStartpoint());
                 continue_tracing = false;
 
@@ -473,9 +472,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                         pathlineSring, stratpoint, endpoint, time);
                 DbHepler.close();
             }
-
             Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + distance + "m",Toast.LENGTH_SHORT).show();
-
         } else {
             Toast.makeText(com.sunland.cpocr.activity.LprMapActivity.this, "没有记录到路径", Toast.LENGTH_SHORT)
                     .show();
@@ -587,7 +584,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
      * 轨迹纠偏成功回调。
      * @param lineID 纠偏的线路ID
      * @param linepoints 纠偏结果
-     * @param distance 总距离
+     * @param distance 总距离66
      * @param waitingtime 等待时间
      */
     @Override
