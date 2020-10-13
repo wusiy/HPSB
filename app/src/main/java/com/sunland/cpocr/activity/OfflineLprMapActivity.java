@@ -17,6 +17,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -78,9 +79,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
-    //
-    private AMapNaviView mAMapNaviView;
-    private AMapNavi mAMapNavi;
+    private ImageView mLocating;
     //声明AMapLocationClient类对象，定位发起端
     private AMapLocationClient mLocationClient = null;
     //声明mLocationOption对象，定位参数
@@ -139,7 +138,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         dialog = new ProgressDialog(this);
         dialog.setMessage("正在GPS定位...(请到GPS信号强的地方如室外开阔处以加速定位)");
         dialog.show();
-
+        dialog.setCanceledOnTouchOutside(false);
         lat = 0;
         actionBar.setTitle("");
         //获取地图控件引用
@@ -155,6 +154,8 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         initpolyline();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         init();
+        mLocating = findViewById(R.id.iv_locating);
+        mLocating.setVisibility(View.VISIBLE);
                     // 通过监听器监听GPS提供的定位信息的改变
                     if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // TODO: Consider calling
@@ -171,6 +172,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                         public void onLocationChanged(Location loc) {
                             // 使用GPS提供的定位信息来更新位置
                             if(showDialog){
+                                mLocating.setVisibility(View.GONE);
                                 dialog.dismiss();
                                 showDialog = false;
                             }

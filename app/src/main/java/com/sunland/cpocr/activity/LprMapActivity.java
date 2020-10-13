@@ -1,6 +1,7 @@
 package com.sunland.cpocr.activity;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -96,6 +98,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     //
     private AMapNaviView mAMapNaviView;
     private AMapNavi mAMapNavi;
+    private ImageView mLocating;
     //声明AMapLocationClient类对象，定位发起端
     private AMapLocationClient mLocationClient = null;
     //声明mLocationOption对象，定位参数
@@ -138,6 +141,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private SearchModuleDelegate mSearchModuelDeletage;
     private String startType;
     private Location loc;
+    private ProgressDialog dialog;
 
     private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
     private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
@@ -148,6 +152,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         lat = 0;
         actionBar.setTitle("");
         startType = getIntent().getStringExtra(NAVI_TYPE_KEY);
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("正在GPS定位...");
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
         //获取地图控件引用
         mapView = (MapView) findViewById(R.id.mapview);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
@@ -171,6 +179,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mAMapNavi = AMapNavi.getInstance(getApplicationContext());
         mAMapNavi.addAMapNaviListener(this);
         mAMapNavi.setUseInnerVoice(true);
+        mLocating = findViewById(R.id.iv_locating);
+        mLocating.setVisibility(View.VISIBLE);
 
         mTraceoverlay = new TraceOverlay(aMap);
         initpolyline();
@@ -351,8 +361,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             case R.id.navi:
                 if(lat != 0) {
                     mSearchModuelDeletage.setCurrLoc(loc);
+                    mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
+                } else{
+                    Toast.makeText(this,"请等待初次定位完成后再使用导航", Toast.LENGTH_SHORT).show();
                 }
-                mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
                 break;
 
             case R.id.track_records:
@@ -403,6 +415,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                         + aMapLocation.getStreetNum());
                 // 如果不设置标志位，此时再拖动地图时，它会不断将地图移动到当前的位置
                 if (isFirstLoc) {
+                    dialog.dismiss();
+                    mLocating.setVisibility(View.GONE);
+
                     //设置缩放级别
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
                     //将地图移动到定位点
@@ -437,7 +452,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 Log.e("AmapError", "location Error, ErrCode:"
                         + aMapLocation.getErrorCode() + ", errInfo:"
                         + aMapLocation.getErrorInfo());
-                Toast.makeText(getApplicationContext(), "定位失败", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), "定位失败", Toast.LENGTH_LONG).show();
             }
         }
     }
