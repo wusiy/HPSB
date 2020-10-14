@@ -38,6 +38,8 @@ import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
@@ -62,6 +64,7 @@ import com.sunland.cpocr.path_record.record.PathRecord;
 import com.sunland.cpocr.path_record.recorduitl.Util;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
+import com.sunland.cpocr.utils.SensorEventHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -131,6 +134,12 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     private Marker marker;
     private ProgressDialog dialog;
     private boolean showDialog;
+    private Marker mLocMarker;
+    private SensorEventHelper mSensorHelper;
+    private Circle mCircle;
+    public static final String LOCATION_MARKER_FLAG = "mylocation";
+    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
+    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -176,7 +185,10 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                                 dialog.dismiss();
                                 showDialog = false;
                             }
-                            updatePosition(loc);
+                            //updatePosition(loc);
+                            addCircle(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLongitude()), fromGpsToAmap(loc).getAccuracy());//添加定位精度圆
+                            addMarker(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLocationType()));//添加定位图标
+                            mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                             if (istracing) {
                                 LatLng mylocation = new LatLng(fromGpsToAmap(loc).getLatitude(),
                                         fromGpsToAmap(loc).getLongitude());
@@ -209,7 +221,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                                 // for ActivityCompat#requestPermissions for more details.
                                 return;
                             }
-                            updatePosition(locationManager.getLastKnownLocation(provider));
+                            //updatePosition(locationManager.getLastKnownLocation(provider));
                         }
                         @Override
                         public void onProviderDisabled(String provider) {
@@ -231,6 +243,32 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
             // 改变地图的倾斜度
             aMap.moveCamera(tiltUpdate);
         }
+        mSensorHelper = new SensorEventHelper(this);
+        if (mSensorHelper != null) {
+            mSensorHelper.registerSensorListener();
+        }
+    }
+
+    private void addCircle(LatLng latlng, double radius) {
+        CircleOptions options = new CircleOptions();
+        options.strokeWidth(1f);
+        options.fillColor(FILL_COLOR);
+        options.strokeColor(STROKE_COLOR);
+        options.center(latlng);
+        options.radius(radius);
+        mCircle = aMap.addCircle(options);
+    }
+
+    private void addMarker(LatLng latlng) {
+        if (mLocMarker != null) {
+            return;
+        }
+        MarkerOptions options = new MarkerOptions();
+        options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
+        options.anchor(0.5f, 0.5f);
+        options.position(latlng);
+        mLocMarker = aMap.addMarker(options);
+        mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
     private void updatePosition(Location location) {

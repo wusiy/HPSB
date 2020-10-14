@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
@@ -33,8 +34,11 @@ import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
+import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.navi.AMapNavi;
@@ -75,6 +79,7 @@ import com.sunland.cpocr.path_record.record.PathRecord;
 import com.sunland.cpocr.path_record.recorduitl.Util;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
+import com.sunland.cpocr.utils.SensorEventHelper;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -136,12 +141,16 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private int tracesize = 30;
     private int mDistance = 0;
     private TraceOverlay mTraceoverlay;
-    // private TextView mResultShow;
-    private Marker mlocMarker;
     private SearchModuleDelegate mSearchModuelDeletage;
     private String startType;
     private Location loc;
     private ProgressDialog dialog;
+    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
+    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
+    private Marker mLocMarker;
+    private SensorEventHelper mSensorHelper;
+    private Circle mCircle;
+    public static final String LOCATION_MARKER_FLAG = "mylocation";
 
     private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
     private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
@@ -163,8 +172,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         if (aMap == null) {
             aMap = mapView.getMap();
         }
-        aMap.setLoadOfflineData(false);
-        aMap.setLoadOfflineData(true);
+
         //设置显示定位按钮 并且可以点击
         UiSettings settings = aMap.getUiSettings();
         aMap.setLocationSource((LocationSource) this);//设置了定位的监听
@@ -276,6 +284,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     }
 
     private void location() {
+        mSensorHelper = new SensorEventHelper(this);
+        if (mSensorHelper != null) {
+            mSensorHelper.registerSensorListener();
+        }
         //初始化定位
         mLocationClient = new AMapLocationClient(getApplicationContext());
         //设置定位回调监听
@@ -294,6 +306,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mLocationOption.setMockEnable(false);
         //设置定位间隔,单位毫秒,默认为2000ms
         mLocationOption.setInterval(2000);
+        mLocationOption.setGpsFirst(true);
         //给定位客户端对象设置定位参数
         mLocationClient.setLocationOption(mLocationOption);
         //启动定位
@@ -423,6 +436,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     //Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
                     isFirstLoc = false;
                     mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+
+//                    addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
+//                    addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
+//                    mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                 }
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
@@ -451,6 +468,28 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 //Toast.makeText(getApplicationContext(), "定位失败", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void addCircle(LatLng latlng, double radius) {
+        CircleOptions options = new CircleOptions();
+        options.strokeWidth(1f);
+        options.fillColor(FILL_COLOR);
+        options.strokeColor(STROKE_COLOR);
+        options.center(latlng);
+        options.radius(radius);
+        mCircle = aMap.addCircle(options);
+    }
+
+    private void addMarker(LatLng latlng) {
+        if (mLocMarker != null) {
+            return;
+        }
+        MarkerOptions options = new MarkerOptions();
+        options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
+        options.anchor(0.5f, 0.5f);
+        options.position(latlng);
+        mLocMarker = aMap.addMarker(options);
+        mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
     protected void saveRecord(List<AMapLocation> list, String time) {
