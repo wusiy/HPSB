@@ -206,6 +206,14 @@ public class DbCpHmZp {
         return record;
     }
 
+    /**
+     * 删除一条车牌记录
+     * @return
+     */
+    public boolean deleteOneCpHmZp(String cphm ) {
+        return db.delete(RECORD_TABLE, "carnum=?", new String[] { String.valueOf(cphm)}) > 0;
+    }
+
 
 
     private String[] getColumns() {

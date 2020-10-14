@@ -222,7 +222,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 continue_tracing = true;
                 continueTracing();
             }
-            Log.d("CCCC", "AAA");
             mAMapNavi = AMapNavi.getInstance(getApplicationContext());
             mAMapNavi.addAMapNaviListener(this);
             mAMapNavi.setUseInnerVoice(true);
@@ -246,8 +245,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mStartTime = System.currentTimeMillis();
         record.setDate(getcueDate(mStartTime));
         aMap.clear(true);
-        Log.d("ZZZZZZ", "zz");
-        Log.d("ZZZZZZ", String.valueOf(lastRecord.getStartpoint().getLatitude()));
         record.addpoint(lastRecord.getStartpoint());
         mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
                 lastRecord.getStartpoint().getLongitude()));
@@ -417,7 +414,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 if (isFirstLoc) {
                     dialog.dismiss();
                     mLocating.setVisibility(View.GONE);
-
                     //设置缩放级别
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
                     //将地图移动到定位点
@@ -459,7 +455,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
 
     protected void saveRecord(List<AMapLocation> list, String time) {
         if (list != null && list.size() > 0) {
-
             String duration = getDuration();
             float distance = getDistance(list);
             String average = getAverage(distance);

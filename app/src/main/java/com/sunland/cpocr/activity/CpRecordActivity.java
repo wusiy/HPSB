@@ -11,12 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.adapter.CphmAdapter;
 import com.sunland.cpocr.activity.adapter.CpzpAdapter;
 import com.sunland.cpocr.db.DbCpHmZp;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -27,8 +29,11 @@ public class CpRecordActivity extends AppCompatActivity {
     private RecyclerView recyclerView_cpzp;
     private ImageView   iv_cp;
     private CphmAdapter cphmAdapter;
+    private CpzpAdapter cpzpAdapter;
     private DbCpHmZp DbHepler;
-    private String[] splitZp;
+    private List<String> cphmAll;
+    //正在图片展示的车牌号码
+    private String showingCphm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +53,10 @@ public class CpRecordActivity extends AppCompatActivity {
 
         DbHepler = new DbCpHmZp(this);
         DbHepler.open();
-        List<String> cphm = DbHepler.queryAllCarNum();
+        cphmAll = DbHepler.queryAllCarNum();
         DbHepler.close();
 
-        cphmAdapter = new CphmAdapter(cphm);
+        cphmAdapter = new CphmAdapter(cphmAll);
         cphmAdapter.setScrollTargetPositionListener(new CphmAdapter.OnScrollTargetPositionListener() {
             @Override
             public void scrollToPosition(int postion) {
@@ -60,16 +65,17 @@ public class CpRecordActivity extends AppCompatActivity {
         });
         cphmAdapter.setmOnItemOnClickListener(new CphmAdapter.OnItemOnClickListener() {
             @Override
-            public void onItemLongClock(View view, int pos) {
-                Log.d("WWW", pos + "");
+            public void onItemLongClock(View view, String cphm, int pos) {
+                deleteOneCp(cphm);
             }
             @Override
             public void onItemDetailBtnClick(View view, String cphm) {
+                showingCphm = cphm;
                 DbHepler.open();
                 String record = DbHepler.queryRecordByCarNum(cphm);
                 DbHepler.close();
                 String[] splitZp= record.split("\\|");
-                CpzpAdapter cpzpAdapter = new CpzpAdapter(splitZp);
+                cpzpAdapter = new CpzpAdapter(splitZp);
                 cpzpAdapter.setScrollTargetPositionListener(new CpzpAdapter.OnScrollTargetPositionListener() {
                     @Override
                     public void scrollToPosition(int postion) {
@@ -100,8 +106,48 @@ public class CpRecordActivity extends AppCompatActivity {
                 iv_cp.setVisibility(View.INVISIBLE);
             }
         });
-
         recyclerView_cphm.setAdapter(cphmAdapter);
-        cphmAdapter.add_all_hphm(cphm);
+        cphmAdapter.add_all_hphm(cphmAll);
+    }
+
+    private void deleteOneCp(String cphm){
+        boolean deleted = false;
+        DbHepler.open();
+        String record = DbHepler.queryRecordByCarNum(cphm);
+        String[] splitZp= record.split("\\|");
+        //删除相关照片文件
+        for (String s : splitZp) {
+            File file = new File(s);
+            if (file.isFile() && file.exists()) {
+                deleted = file.delete();
+                if (!deleted) {
+                    break;
+                }
+            }
+        }
+        if(deleted){
+            deleted = DbHepler.deleteOneCpHmZp(cphm);
+        }
+        if(deleted){
+            //更新车牌列表
+            cphmAll = DbHepler.queryAllCarNum();
+            DbHepler.close();
+            for (int i = 0; i < cphmAll.size() + 1; i++) {
+                cphmAdapter.notifyItemRemoved(0);
+                cphmAdapter.notifyDataSetChanged();
+            }
+            cphmAdapter.add_all_hphm(cphmAll);
+            //若被删除的车牌照片正在展示，则清空展示的照片
+            if(showingCphm != null && showingCphm.equals(cphm)){
+                iv_cp.setVisibility(View.INVISIBLE);
+                for (int i = 0; i < splitZp.length; i++) {
+                    cpzpAdapter.notifyItemRemoved(0);
+                    cpzpAdapter.notifyDataSetChanged();
+                }
+            }
+            Toast.makeText(this,cphm + " 相关数据已删除",Toast.LENGTH_LONG).show();
+        } else{
+            Toast.makeText(this,cphm + " 数据删除出错",Toast.LENGTH_LONG).show();
+        }
     }
 }

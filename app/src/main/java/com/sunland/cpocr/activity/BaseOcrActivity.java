@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -78,7 +79,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
      * 号牌种类中文
      */
     public static final String EXTRA_RET_HPZL_STR = "hpzl_str";
-
 
     //    private static final String PATH = Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera/";
     private Camera mCamera;
@@ -290,7 +290,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                         err = "激活失败";
                         break;
                 }
-
                 Toast.makeText(getApplicationContext(), err, Toast.LENGTH_SHORT).show();
                 bInitKernal = false;
             } else {
@@ -360,7 +359,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
 
     @Override
     public void surfaceChanged(final SurfaceHolder holder, int format, int width, int height) {
-
 
     }
 
@@ -457,7 +455,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         }
 
         mCameraParameters.setPictureFormat(PixelFormat.JPEG);
-
         mCameraParameters.setPreviewSize(preWidth, preHeight);
 
         if (mCameraParameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
@@ -491,7 +488,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                     r = width - l;
                 }
             }
-
 
             double proportion = 0, hproportion = 0;
             if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
@@ -599,7 +595,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
             canCapture = false;
         }
         if (!pauseOcr() && bInitKernal && canCapture) {
-
             Size size = mCamera.getParameters().getPreviewSize(); //获取预览大小
             final int w = size.width;  //宽度
             final int h = size.height;
@@ -634,11 +629,12 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                         e.printStackTrace();
                         hpysStr = "";
                     }
-                    Log.d("aaa",hphm);
+
                     mVibrator.vibrate(300);
-
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(180);
+                    bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
                     String pathPhoto = saveMyBitmap(bmp);
-
                     DbHepler = new DbCpHmZp(this);
                     DbHepler.open();
                     DbHepler.save_carinfo(hphm,pathPhoto);
@@ -653,12 +649,10 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         }
     }
 
-
     //保存文件到指定路径
     private String saveMyBitmap(Bitmap bitmap) {
 
         File sd = Environment.getExternalStorageDirectory();
-
         File destDir = new File(sd.getPath() + "/HPSB/");
         if (!destDir.exists()) {
             destDir.mkdirs();
@@ -675,7 +669,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
             }
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos);
             bitmap.recycle();
-
         } catch (Exception e) {
             Log.e("vvv", "保存失败");
             // TODO Auto-generated catch block
@@ -689,7 +682,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                     e.printStackTrace();
                 }
         }
-
         return tmpfile;
     }
 

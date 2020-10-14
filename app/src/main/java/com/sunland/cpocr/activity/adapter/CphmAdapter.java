@@ -2,6 +2,8 @@ package com.sunland.cpocr.activity.adapter;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,32 +55,17 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
         }
 
         viewHolder.tvCphm.setText(info);
-
             if (mOnItemOnClickListener != null) {
                 int finalPosition1 = position;
                 viewHolder.itemView.setOnLongClickListener(view -> {
-                    mOnItemOnClickListener.onItemLongClock(viewHolder.itemView, finalPosition1);
+                    mOnItemOnClickListener.onItemLongClock(viewHolder.itemView, info, finalPosition1);
                     return false;
                 });
-
                 viewHolder.itemView.setOnClickListener(view -> {
                     mOnItemOnClickListener.onItemDetailBtnClick(viewHolder.itemView, info);
                 });
             }
-
-
     }
-
-            /**
-             * 删除一条信息
-             *
-             * @param pos
-             */
-            public void removeItem ( int pos){
-                mData.remove(pos);
-                notifyDataSetChanged();
-                notifyItemRemoved(pos);
-            }
 
     /**
      * 增加一条车牌号码
@@ -86,12 +73,10 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
      * @param hphm    号牌号码
      */
     public void add_one_hphm(String hphm) {
-
             mData.add(hphm);
             notifyItemInserted(getItemCount() - 1);
             if (listener != null)
                 listener.scrollToPosition(getItemCount() - 1);
-
     }
 
     /**
@@ -100,11 +85,17 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
      * @param hphm    号牌号码
      */
     public void add_all_hphm(List<String> hphm) {
+        if(mData != null) {
+            for (int i = 0; i < getItemCount(); i++) {
+                notifyItemRemoved(0);
+                notifyDataSetChanged();
+            }
+            mData.clear();
+        }
         for(int i = 0; i < hphm.size(); i ++){
             add_one_hphm(hphm.get(i));
         }
     }
-
             @Override
             public int getItemCount () {
                 return mData.size();
@@ -115,12 +106,11 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
                 public ViewHolder(@NonNull View itemView) {
                     super(itemView);
                     tvCphm = (TextView) itemView.findViewById(R.id.tv_cphm);
-
                 }
             }
 
             public interface OnItemOnClickListener {
-                void onItemLongClock(View view, int pos);
+                void onItemLongClock(View view, String cphm, int pos);
                 void onItemDetailBtnClick(View view, String cphm);
             }
 }

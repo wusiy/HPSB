@@ -48,9 +48,6 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         return vh;
     }
 
-
-
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
         position = viewHolder.getAdapterPosition();
@@ -68,7 +65,6 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         viewHolder.ivCpzp.setImageBitmap(bitmap);
         //viewHolder.tvCphm.setText(info);
 
-
         if (mOnItemOnClickListener != null) {
             int finalPosition1 = position;
             viewHolder.itemView.setOnLongClickListener(view -> {
@@ -80,12 +76,7 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
                 mOnItemOnClickListener.onItemDetailBtnClick(viewHolder.itemView, info);
             });
         }
-
-
-
-
     }
-
 
     /**
      * 增加一张车牌图片显示
@@ -96,7 +87,6 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
             notifyItemInserted(getItemCount() - 1);
             if (listener != null)
                 listener.scrollToPosition(getItemCount() - 1);
-
     }
 
     /**
@@ -108,7 +98,6 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         if(mData!= null) {
             for (int i = 0; i < getItemCount(); i++) {
                 notifyItemRemoved(0);
-                Log.d("PPPP","moved" + i);
                 notifyDataSetChanged();
             }
         }
@@ -120,6 +109,20 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         }
     }
 
+    /**
+     * 清空照片列表
+     *
+     */
+    public void clear_all() {
+        if(mData!= null) {
+            for (int i = 0; i < getItemCount(); i++) {
+                notifyItemRemoved(0);
+                notifyDataSetChanged();
+            }
+        }
+        mData = null;
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount () {
@@ -128,12 +131,9 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView ivCpzp;
-
-
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ivCpzp = (ImageView) itemView.findViewById(R.id.iv_zp);
-
         }
     }
 
@@ -142,6 +142,5 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
 
         void onItemDetailBtnClick(View view, String cphm);
     }
-
 
 }
