@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
@@ -19,14 +18,11 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import androidx.appcompat.app.AlertDialog;
-
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdateFactory;
@@ -65,13 +61,11 @@ import com.amap.api.trace.TraceLocation;
 import com.amap.api.trace.TraceOverlay;
 import com.amap.poisearch.searchmodule.ISearchModule;
 import com.amap.poisearch.searchmodule.SearchModuleDelegate;
-import com.amap.poisearch.util.AMapUtil;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
-import com.sunland.cpocr.BuildConfig;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
 import com.sunland.cpocr.db.DbTracks;
@@ -80,14 +74,10 @@ import com.sunland.cpocr.path_record.recorduitl.Util;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
 import com.sunland.cpocr.utils.SensorEventHelper;
-
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-
 
 public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener,
         TraceListener, AMapNaviListener, AMapNaviViewListener {
@@ -139,22 +129,19 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private List<TraceOverlay> mOverlayList = new ArrayList<TraceOverlay>();
     private List<AMapLocation> recordList = new ArrayList<AMapLocation>();
     private int tracesize = 30;
-    private int mDistance = 0;
     private TraceOverlay mTraceoverlay;
     private SearchModuleDelegate mSearchModuelDeletage;
     private String startType;
     private Location loc;
     private ProgressDialog dialog;
-    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
-    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
     private Marker mLocMarker;
     private SensorEventHelper mSensorHelper;
     private Circle mCircle;
     public static final String LOCATION_MARKER_FLAG = "mylocation";
-
+    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
+    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
     private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
     private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
-    private static int LPRMAP_ACTIVITY_START_NAVI_CODE = 3;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,7 +149,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         actionBar.setTitle("");
         startType = getIntent().getStringExtra(NAVI_TYPE_KEY);
         dialog = new ProgressDialog(this);
-        dialog.setMessage("正在GPS定位...");
+        dialog.setMessage("正在定位...");
         dialog.show();
         dialog.setCanceledOnTouchOutside(false);
         //获取地图控件引用
@@ -172,7 +159,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         if (aMap == null) {
             aMap = mapView.getMap();
         }
-
         //设置显示定位按钮 并且可以点击
         UiSettings settings = aMap.getUiSettings();
         aMap.setLocationSource((LocationSource) this);//设置了定位的监听
@@ -180,7 +166,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         // 是否显示定位按钮
         settings.setMyLocationButtonEnabled(true);
         aMap.setMyLocationEnabled(true);//显示定位层并且可以触发定位,默认是flase
-
         mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
         mAMapNaviView.onCreate(savedInstanceState);
         mAMapNaviView.setAMapNaviViewListener(this);
@@ -189,7 +174,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mAMapNavi.setUseInnerVoice(true);
         mLocating = findViewById(R.id.iv_locating);
         mLocating.setVisibility(View.VISIBLE);
-
         mTraceoverlay = new TraceOverlay(aMap);
         initpolyline();
         initui();
@@ -272,7 +256,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 trace();
             }
         }
-
         record.addpoint(lastRecord.getEndpoint());
         mPolyoptions.add(new LatLng(lastRecord.getEndpoint().getLatitude(),
                 lastRecord.getEndpoint().getLongitude()));
@@ -412,7 +395,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 aMapLocation.getStreetNum();//街道门牌号信息
                 aMapLocation.getCityCode();//城市编码
                 aMapLocation.getAdCode();//地区编码
-
                 //Toast.makeText(this,aMapLocation.getAddress(),Toast.LENGTH_LONG).show();
                 //获取定位信息
                 StringBuffer buffer = new StringBuffer();
@@ -424,31 +406,32 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                         + aMapLocation.getStreet() + ""
                         + aMapLocation.getStreetNum());
                 // 如果不设置标志位，此时再拖动地图时，它会不断将地图移动到当前的位置
+                //aMapLocation.setLatitude(aMapLocation.getLatitude() + Math.random()/1000);
+                //aMapLocation.setLongitude(aMapLocation.getLongitude() + Math.random()/1000);
                 if (isFirstLoc) {
                     dialog.dismiss();
                     mLocating.setVisibility(View.GONE);
                     //设置缩放级别
-                    aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
                     //将地图移动到定位点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                     //添加图钉
                     // aMap.addMarker(getMarkerOptions(amapLocation));
                     //Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
                     isFirstLoc = false;
-                    mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                   mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
 
-//                    addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
-//                    addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
-//                    mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                 }
+//                addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
+//                addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
                 lgt = aMapLocation.getLongitude();
                 loc = aMapLocation;
                 LatLng mylocation = new LatLng(aMapLocation.getLatitude(),
                         aMapLocation.getLongitude());
-                mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-
+                //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
                 if (istracing) {
                     mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
@@ -471,6 +454,9 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     }
 
     private void addCircle(LatLng latlng, double radius) {
+        if (mCircle != null) {
+            mCircle.remove();
+        }
         CircleOptions options = new CircleOptions();
         options.strokeWidth(1f);
         options.fillColor(FILL_COLOR);
@@ -481,14 +467,16 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     }
 
     private void addMarker(LatLng latlng) {
-        if (mLocMarker != null) {
-            return;
-        }
+        Marker lastLocMarker = mLocMarker;
         MarkerOptions options = new MarkerOptions();
         options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
         options.anchor(0.5f, 0.5f);
         options.position(latlng);
         mLocMarker = aMap.addMarker(options);
+        mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
+        if (lastLocMarker != null) {
+            lastLocMarker.remove();
+        }
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
@@ -514,8 +502,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 DbHepler.updatelastrecord(String.valueOf(distance), duration, average,
                         pathlineSring, stratpoint, endpoint, time);
                 DbHepler.close();
-            }
-            else{
+            } else{
                 DbHepler = new DbTracks(this);
                 DbHepler.open();
                 DbHepler.createrecord(String.valueOf(distance), duration, average,

@@ -1,6 +1,5 @@
 package com.sunland.cpocr.activity;
 
-
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -12,6 +11,8 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -20,22 +21,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.widget.ToggleButton;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-
 import com.amap.api.location.AMapLocation;
-import com.amap.api.location.AMapLocationClient;
-import com.amap.api.location.AMapLocationClientOption;
-
 import com.amap.api.location.CoordinateConverter;
 import com.amap.api.location.DPoint;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
-import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.Circle;
@@ -46,9 +40,25 @@ import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.navi.AMapNavi;
+import com.amap.api.navi.AMapNaviListener;
 import com.amap.api.navi.AMapNaviView;
+import com.amap.api.navi.AMapNaviViewListener;
+import com.amap.api.navi.model.AMapCalcRouteResult;
+import com.amap.api.navi.model.AMapLaneInfo;
+import com.amap.api.navi.model.AMapModelCross;
+import com.amap.api.navi.model.AMapNaviCameraInfo;
+import com.amap.api.navi.model.AMapNaviCross;
+import com.amap.api.navi.model.AMapNaviInfo;
+import com.amap.api.navi.model.AMapNaviLocation;
+import com.amap.api.navi.model.AMapNaviRouteNotifyData;
+import com.amap.api.navi.model.AMapNaviTrafficFacilityInfo;
+import com.amap.api.navi.model.AMapServiceAreaInfo;
+import com.amap.api.navi.model.AimLessModeCongestionInfo;
+import com.amap.api.navi.model.AimLessModeStat;
+import com.amap.api.navi.model.NaviInfo;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.trace.LBSTraceClient;
+import com.amap.api.trace.TraceListener;
 import com.amap.api.trace.TraceLocation;
 import com.amap.api.trace.TraceOverlay;
 import com.amap.poisearch.searchmodule.ISearchModule;
@@ -56,6 +66,7 @@ import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
+import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
@@ -65,30 +76,24 @@ import com.sunland.cpocr.path_record.recorduitl.Util;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
 import com.sunland.cpocr.utils.SensorEventHelper;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
-public class OfflineLprMapActivity extends BaseOcrActivity {
+public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListener, AMapNaviListener, AMapNaviViewListener {
 
     public static final String FAVTYPE_KEY = "favtype";
     public static final String POIITEM_STR_KEY = "poiitem_str";
     public static final String NAVI_TYPE_KEY = "navi";
     public static final String IS_TRACING_KEY = "track";
-
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
+    //
+    private AMapNaviView mAMapNaviView;
+    private AMapNavi mAMapNavi;
     private ImageView mLocating;
-    //声明AMapLocationClient类对象，定位发起端
-    private AMapLocationClient mLocationClient = null;
-    //声明mLocationOption对象，定位参数
-    public AMapLocationClientOption mLocationOption = null;
-    //声明mListener对象，定位监听器
-    private LocationSource.OnLocationChangedListener mListener = null;
     //标识，用于判断是否只显示一次定位信息和用户重新定位
     private boolean isFirstLoc = true;
     //当前定位经纬度
@@ -112,7 +117,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     private PathRecord record;
     private long mStartTime;
     private long mEndTime;
-    private ToggleButton btn;
+    private LocationManager locationManager;
     private DbTracks DbHepler;
     private List<TraceLocation> mTracelocationlist = new ArrayList<TraceLocation>();
     private List<TraceOverlay> mOverlayList = new ArrayList<TraceOverlay>();
@@ -120,36 +125,30 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     private int tracesize = 30;
     private int mDistance = 0;
     private TraceOverlay mTraceoverlay;
-    // private TextView mResultShow;
-    private Marker mlocMarker;
     private SearchModuleDelegate mSearchModuelDeletage;
     private String startType;
     private Location loc;
-
-    private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
-    private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
-    private static int LPRMAP_ACTIVITY_START_NAVI_CODE = 3;
-    private LocationManager locationManager;
-    private String locationProvider;
-    private Marker marker;
     private ProgressDialog dialog;
-    private boolean showDialog;
+    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
+    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
     private Marker mLocMarker;
     private SensorEventHelper mSensorHelper;
     private Circle mCircle;
     public static final String LOCATION_MARKER_FLAG = "mylocation";
-    private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
-    private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
+
+    private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
+    private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
+    private static int LPRMAP_ACTIVITY_START_NAVI_CODE = 3;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        showDialog = true;
-        dialog = new ProgressDialog(this);
-        dialog.setMessage("正在GPS定位...(请到GPS信号强的地方如室外开阔处以加速定位)");
-        dialog.show();
-        dialog.setCanceledOnTouchOutside(false);
         lat = 0;
         actionBar.setTitle("");
+        startType = getIntent().getStringExtra(NAVI_TYPE_KEY);
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("正在使用GPS定位... 请到露天空旷处加速定位");
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
         //获取地图控件引用
         mapView = (MapView) findViewById(R.id.mapview);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
@@ -157,81 +156,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         if (aMap == null) {
             aMap = mapView.getMap();
         }
-        aMap.setLoadOfflineData(false);
-        aMap.setLoadOfflineData(true);
-        mTraceoverlay = new TraceOverlay(aMap);
-        initpolyline();
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        init();
-        mLocating = findViewById(R.id.iv_locating);
-        mLocating.setVisibility(View.VISIBLE);
-                    // 通过监听器监听GPS提供的定位信息的改变
-                    if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-                        return;
-                    }
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location loc) {
-                            // 使用GPS提供的定位信息来更新位置
-                            if(showDialog){
-                                mLocating.setVisibility(View.GONE);
-                                dialog.dismiss();
-                                showDialog = false;
-                            }
-                            //updatePosition(loc);
-                            addCircle(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLongitude()), fromGpsToAmap(loc).getAccuracy());//添加定位精度圆
-                            addMarker(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLocationType()));//添加定位图标
-                            mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
-                            if (istracing) {
-                                LatLng mylocation = new LatLng(fromGpsToAmap(loc).getLatitude(),
-                                        fromGpsToAmap(loc).getLongitude());
-                              //  mListener.onLocationChanged(fromGpsToAmap(loc));// 显示系统小蓝点
-                                aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
-                                record.addpoint(fromGpsToAmap(loc));
-                                mPolyoptions.add(mylocation);
-                                mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(loc)));
-                                redrawline();
-                                if (mTracelocationlist.size() > tracesize - 1) {
-                                    trace();
-                                }
-                            }
-                        }
 
-                        @Override
-                        public void onStatusChanged(String provider, int status, Bundle extras) {
-                        }
-
-                        @Override
-                        public void onProviderEnabled(String provider) {
-                            // 使用GPS提供的定位信息来更新位置
-                            if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                // TODO: Consider calling
-                                //    ActivityCompat#requestPermissions
-                                // here to request the missing permissions, and then overriding
-                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                //                                          int[] grantResults)
-                                // to handle the case where the user grants the permission. See the documentation
-                                // for ActivityCompat#requestPermissions for more details.
-                                return;
-                            }
-                            //updatePosition(locationManager.getLastKnownLocation(provider));
-                        }
-                        @Override
-                        public void onProviderDisabled(String provider) {
-                        }
-                    });
-
-    }
-
-    // 初始化AMap对象
-    private void init() {
         if (aMap == null) {
             aMap = mapView.getMap();
             // 创建一个设置放大级别的CameraUpdate
@@ -247,49 +172,181 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         if (mSensorHelper != null) {
             mSensorHelper.registerSensorListener();
         }
-    }
 
-    private void addCircle(LatLng latlng, double radius) {
-        CircleOptions options = new CircleOptions();
-        options.strokeWidth(1f);
-        options.fillColor(FILL_COLOR);
-        options.strokeColor(STROKE_COLOR);
-        options.center(latlng);
-        options.radius(radius);
-        mCircle = aMap.addCircle(options);
-    }
+        mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
+        mAMapNaviView.onCreate(savedInstanceState);
+        mAMapNaviView.setAMapNaviViewListener(this);
+        mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+        mAMapNavi.addAMapNaviListener(this);
+        mAMapNavi.setUseInnerVoice(true);
+        mLocating = findViewById(R.id.iv_locating);
+        mLocating.setVisibility(View.VISIBLE);
 
-    private void addMarker(LatLng latlng) {
-        if (mLocMarker != null) {
+        mTraceoverlay = new TraceOverlay(aMap);
+        initpolyline();
+        initui();
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // 通过监听器监听GPS提供的定位信息的改变
+        if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        MarkerOptions options = new MarkerOptions();
-        options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
-        options.anchor(0.5f, 0.5f);
-        options.position(latlng);
-        mLocMarker = aMap.addMarker(options);
-        mLocMarker.setTitle(LOCATION_MARKER_FLAG);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, new LocationListener() {
+            @Override
+            public void onLocationChanged(Location loc) {
+                // 使用GPS提供的定位信息来更新位置
+                if(dialog.isShowing()){
+                    mLocating.setVisibility(View.GONE);
+                    dialog.dismiss();
+                }
+                //updatePosition(loc);
+                addCircle(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLongitude()), fromGpsToAmap(loc).getAccuracy());//添加定位精度圆
+                addMarker(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLocationType()));//添加定位图标
+                mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
+                lat = fromGpsToAmap(loc).getLatitude();
+                lgt = fromGpsToAmap(loc).getLatitude();
+                if (isFirstLoc) {
+                    dialog.dismiss();
+                    mLocating.setVisibility(View.GONE);
+                    //设置缩放级别
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                    //将地图移动到定位点
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat, lgt)));
+                    isFirstLoc = false;
+                }
+                if (istracing) {
+                    LatLng mylocation = new LatLng(fromGpsToAmap(loc).getLatitude(),
+                            fromGpsToAmap(loc).getLongitude());
+                    //  mListener.onLocationChanged(fromGpsToAmap(loc));// 显示系统小蓝点
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
+                    record.addpoint(fromGpsToAmap(loc));
+                    mPolyoptions.add(mylocation);
+                    mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(loc)));
+                    redrawline();
+                    if (mTracelocationlist.size() > tracesize - 1) {
+                        trace();
+                    }
+                }
+                loc = fromGpsToAmap(loc);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+                // 使用GPS提供的定位信息来更新位置
+                if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                //updatePosition(locationManager.getLastKnownLocation(provider));
+            }
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        });
     }
 
-    private void updatePosition(Location location) {
-        LatLng pos = new LatLng(fromGpsToAmap(location).getLatitude(), fromGpsToAmap(location).getLongitude());
-        // 创建一个设置经纬度的CameraUpdate
-        CameraUpdate cu = CameraUpdateFactory.changeLatLng(pos);
-        // 更新地图的显示区域
-        aMap.moveCamera(cu);
-        // 清除所有Marker等覆盖物
-        //aMap.clear();
-        if(marker != null){
-            marker.remove();
+    private void initui(){
+        if(startType.equals("")){
+            mapView.setVisibility(View.VISIBLE);
+            mAMapNaviView.setVisibility(View.INVISIBLE);
+        } else if(startType.equals("cancle_navi")){ //路径规划时取消导航
+            mapView.setVisibility(View.VISIBLE);
+            mAMapNaviView.setVisibility(View.INVISIBLE);
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
+        } else if(startType.equals("false")){ //模拟导航
+            mapView.setVisibility(View.INVISIBLE);
+            mAMapNaviView.setVisibility(View.VISIBLE);
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
+            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+            mAMapNavi.addAMapNaviListener(this);
+            mAMapNavi.setUseInnerVoice(true);
+            mAMapNavi.setEmulatorNaviSpeed(60);
+            mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
+        } else if(startType.equals("true")){ //实时导航
+            mapView.setVisibility(View.INVISIBLE);
+            mAMapNaviView.setVisibility(View.VISIBLE);
+            //是否继续上次的巡逻轨迹记录
+            if(getIntent().getStringExtra(IS_TRACING_KEY).equals("true")){
+                continue_tracing = true;
+                continueTracing();
+            }
+            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
+            mAMapNavi.addAMapNaviListener(this);
+            mAMapNavi.setUseInnerVoice(true);
+            mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
         }
-        // 创建一个MarkerOptions对象
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(pos);
-        // 设置MarkerOptions使用自定义图标
-        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.point5));
-        markerOptions.draggable(true);
-        // 添加MarkerOptions（实际上是添加Marker）
-        marker = aMap.addMarker(markerOptions);
+    }
+
+    //绘制上次记录的巡逻轨迹并继续
+    private void continueTracing(){
+        DbTracks dbhelper = new DbTracks(this.getApplicationContext());
+        dbhelper.open();
+        lastRecord = dbhelper.queryLastRecord();
+        dbhelper.close();
+
+        mpolyline = null;
+        initpolyline();
+        if (record != null) {
+            record = null;
+        }
+        record = new PathRecord();
+        mStartTime = System.currentTimeMillis();
+        record.setDate(getcueDate(mStartTime));
+        aMap.clear(true);
+        record.addpoint(lastRecord.getStartpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
+                lastRecord.getStartpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getStartpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
+        }
+
+        for(int i = 0; i < lastRecord.getPathline().size(); i++){
+            record.addpoint(lastRecord.getPathline().get(i));
+            mPolyoptions.add(new LatLng(lastRecord.getPathline().get(i).getLatitude(),
+                    lastRecord.getPathline().get(i).getLongitude()));
+            mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getPathline().get(i)));
+            redrawline();
+            if (mTracelocationlist.size() > tracesize - 1) {
+                trace();
+            }
+        }
+
+        record.addpoint(lastRecord.getEndpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getEndpoint().getLatitude(),
+                lastRecord.getEndpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getEndpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
+        }
     }
 
     private void initpolyline() {
@@ -301,24 +358,14 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.actionbar_activity_lprmap,menu);
-        MenuItem item =menu.findItem(R.id.navi);
-        item.setVisible(false);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    public AMapLocation fromGpsToAmap(Location location) {
-        AMapLocation aMapLocation = new AMapLocation(location);
-        CoordinateConverter converter = new CoordinateConverter(this);
-        converter.from(CoordinateConverter.CoordType.GPS);
-        try {
-            converter.coord(new DPoint(location.getLatitude(), location.getLongitude()));
-            DPoint desLatLng = converter.convert();
-            aMapLocation.setLatitude(desLatLng.getLatitude());
-            aMapLocation.setLongitude(desLatLng.getLongitude());
-        } catch (Exception e) {
-            e.printStackTrace();
+        Menu mMenu=menu;
+        MenuItem item =mMenu.findItem(R.id.recording_track);
+        if(continue_tracing){
+            Toast.makeText(getApplicationContext(),"正在继续上次的巡逻轨迹录制",Toast.LENGTH_LONG).show();
+            item.setIcon(getResources().getDrawable(R.drawable.stop));
+            istracing = true;
         }
-        return aMapLocation;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -343,14 +390,10 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                     istracing = false;
                     mEndTime = System.currentTimeMillis();
                     mOverlayList.add(mTraceoverlay);
+                    //DecimalFormat decimalFormat = new DecimalFormat("0.0");
+                    //string  result = decimalFormat.format(getTotalDistance() / 1000d) + "KM";
                     LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-                   // mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, T1.this);
-//                    if(getTotalDistance() < 10){
-//                        Toast.makeText(getApplicationContext(),"当前轨迹路径总距离少于10m 保存失败",Toast.LENGTH_SHORT).show();
-//                    } else{
-//                        saveRecord(record.getPathline(), record.getDate());
-//                        Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + getTotalDistance() + "m",Toast.LENGTH_SHORT).show();
-//                    }
+                    mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
                     saveRecord(record.getPathline(), record.getDate());
                 }
                 break;
@@ -362,10 +405,14 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                 break;
 
             case R.id.navi:
-                if(lat != 0) {
+                if(lat == 0) {
+                    Toast.makeText(this,"请等待初次定位完成后再使用导航", Toast.LENGTH_SHORT).show();
+                } else if(!isNetworkConnected(this)){
+                    Toast.makeText(this,"当前无网络连接，无法使用导航", Toast.LENGTH_SHORT).show();
+                } else{
                     mSearchModuelDeletage.setCurrLoc(loc);
+                    mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
                 }
-                mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
                 break;
 
             case R.id.track_records:
@@ -381,11 +428,50 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+    private AMapLocation fromGpsToAmap(Location location) {
+        AMapLocation aMapLocation = new AMapLocation(location);
+        CoordinateConverter converter = new CoordinateConverter(this);
+        converter.from(CoordinateConverter.CoordType.GPS);
+        try {
+            converter.coord(new DPoint(location.getLatitude(), location.getLongitude()));
+            DPoint desLatLng = converter.convert();
+            aMapLocation.setLatitude(desLatLng.getLatitude());
+            aMapLocation.setLongitude(desLatLng.getLongitude());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return aMapLocation;
+    }
+
+    private void addCircle(LatLng latlng, double radius) {
+        if (mCircle != null) {
+            mCircle.remove();
+        }
+        CircleOptions options = new CircleOptions();
+        options.strokeWidth(1f);
+        options.fillColor(FILL_COLOR);
+        options.strokeColor(STROKE_COLOR);
+        options.center(latlng);
+        options.radius(radius);
+        mCircle = aMap.addCircle(options);
+    }
+
+    private void addMarker(LatLng latlng) {
+        Marker lastLocMarker = mLocMarker;
+        MarkerOptions options = new MarkerOptions();
+        options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
+        options.anchor(0.5f, 0.5f);
+        options.position(latlng);
+        mLocMarker = aMap.addMarker(options);
+        mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
+        if (lastLocMarker != null) {
+            lastLocMarker.remove();
+        }
+        mLocMarker.setTitle(LOCATION_MARKER_FLAG);
+    }
 
     protected void saveRecord(List<AMapLocation> list, String time) {
         if (list != null && list.size() > 0) {
-            DbHepler = new DbTracks(this);
-            DbHepler.open();
             String duration = getDuration();
             float distance = getDistance(list);
             String average = getAverage(distance);
@@ -394,12 +480,28 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
             AMapLocation lastLocaiton = list.get(list.size() - 1);
             String stratpoint = amapLocationToString(firstLocaiton);
             String endpoint = amapLocationToString(lastLocaiton);
-            DbHepler.createrecord(String.valueOf(distance), duration, average,
-                    pathlineSring, stratpoint, endpoint, time);
-            DbHepler.close();
+            if(continue_tracing){
+                duration = String.valueOf(Double.parseDouble(duration.trim()) + Double.valueOf(lastRecord.getDuration()));
+                distance = getDistance(list) + Float.parseFloat(lastRecord.getDistance());
+                average = String.valueOf(distance / Double.valueOf(getDuration()) + Double.valueOf(lastRecord.getDuration()) * 1000f);
+                stratpoint = amapLocationToString(lastRecord.getStartpoint());
+                continue_tracing = false;
+
+                DbHepler = new DbTracks(this);
+                DbHepler.open();
+                DbHepler.updatelastrecord(String.valueOf(distance), duration, average,
+                        pathlineSring, stratpoint, endpoint, time);
+                DbHepler.close();
+            } else{
+                DbHepler = new DbTracks(this);
+                DbHepler.open();
+                DbHepler.createrecord(String.valueOf(distance), duration, average,
+                        pathlineSring, stratpoint, endpoint, time);
+                DbHepler.close();
+            }
             Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + distance + "m",Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(OfflineLprMapActivity.this, "没有记录到路径", Toast.LENGTH_SHORT)
+            Toast.makeText(com.sunland.cpocr.activity.OfflineLprMapActivity.this, "没有记录到路径", Toast.LENGTH_SHORT)
                     .show();
         }
     }
@@ -481,50 +583,50 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     }
 
     public void record(View view) {
-        Intent intent = new Intent(OfflineLprMapActivity.this, TrackRecordActivity.class);
+        Intent intent = new Intent(com.sunland.cpocr.activity.OfflineLprMapActivity.this, TrackRecordActivity.class);
         startActivity(intent);
     }
 
     private void trace() {
         List<TraceLocation> locationList = new ArrayList<>(mTracelocationlist);
         LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-//        mTraceClient.queryProcessedTrace(1, locationList, LBSTraceClient.TYPE_AMAP, this);
+        mTraceClient.queryProcessedTrace(1, locationList, LBSTraceClient.TYPE_AMAP, this);
         TraceLocation lastlocation = mTracelocationlist.get(mTracelocationlist.size()-1);
         mTracelocationlist.clear();
         mTracelocationlist.add(lastlocation);
     }
 
-//    /**
-//     * 轨迹纠偏失败回调。
-//     * @param i
-//     * @param s
-//     */
-//    @Override
-//    public void onRequestFailed(int i, String s) {
-//        mOverlayList.add(mTraceoverlay);
-//        mTraceoverlay = new TraceOverlay(aMap);
-//    }
+    /**
+     * 轨迹纠偏失败回调。
+     * @param i
+     * @param s
+     */
+    @Override
+    public void onRequestFailed(int i, String s) {
+        mOverlayList.add(mTraceoverlay);
+        mTraceoverlay = new TraceOverlay(aMap);
+    }
 
-//    /**
-//     * 轨迹纠偏成功回调。
-//     * @param lineID 纠偏的线路ID
-//     * @param linepoints 纠偏结果
-//     * @param distance 总距离
-//     * @param waitingtime 等待时间
-//     */
-//    @Override
-//    public void onFinished(int lineID, List<LatLng> linepoints, int distance, int waitingtime) {
-//        if (lineID == 1) {
-//            if (linepoints != null && linepoints.size()>0) {
-//            }
-//        } else if (lineID == 2) {
-//            if (linepoints != null && linepoints.size()>0) {
-//                aMap.addPolyline(new PolylineOptions()
-//                        .setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.grasp_trace_line))
-//                        .width(40).addAll(linepoints));
-//            }
-//        }
-//    }
+    /**
+     * 轨迹纠偏成功回调。
+     * @param lineID 纠偏的线路ID
+     * @param linepoints 纠偏结果
+     * @param distance 总距离66
+     * @param waitingtime 等待时间
+     */
+    @Override
+    public void onFinished(int lineID, List<LatLng> linepoints, int distance, int waitingtime) {
+        if (lineID == 1) {
+            if (linepoints != null && linepoints.size()>0) {
+            }
+        } else if (lineID == 2) {
+            if (linepoints != null && linepoints.size()>0) {
+                aMap.addPolyline(new PolylineOptions()
+                        .setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.grasp_trace_line))
+                        .width(40).addAll(linepoints));
+            }
+        }
+    }
 
     /**
      * 最后获取总距离
@@ -545,7 +647,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        //mAMapNaviView.onResume();
+        mAMapNaviView.onResume();
     }
 
     /**
@@ -555,7 +657,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        //mAMapNaviView.onPause();
+        mAMapNaviView.onPause();
     }
 
     /**
@@ -574,11 +676,15 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-       // mAMapNaviView.onDestroy();
-        //mAMapNavi.stopNavi();
+        mAMapNaviView.onDestroy();
+        mAMapNavi.stopNavi();
     }
 
 
+    @Override
+    public void onTraceProcessing(int i, int i1, List<LatLng> list) {
+
+    }
 
     @Override
     protected void updateUi(int frameLeft, int frameTop, int frameRight, int frameButton) {
@@ -590,6 +696,13 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         mapView.setBackgroundColor(Color.WHITE);
         mapView.setLayoutParams(params);
         //mapView.setVisibility(View.INVISIBLE);
+
+        RelativeLayout.LayoutParams navi_params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
+        navi_params.setMargins(frameRight + mSeekBar.getWidth() -60, -300, -230, -300);
+        mAMapNaviView.setBackgroundColor(Color.WHITE);
+        mAMapNaviView.setLayoutParams(navi_params);
+        //mAMapNaviView.setVisibility(View.INVISIBLE);
 
         mSearchModuelDeletage = new SearchModuleDelegate();
         mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.DEST_POI_TYPE);
@@ -769,7 +882,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
                             mEndTime = System.currentTimeMillis();
                             mOverlayList.add(mTraceoverlay);
                             LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-                            //mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, T1.this);
+                            mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
                             saveRecord(record.getPathline(), record.getDate());
                         } else{
                             intent.putExtra(IS_TRACING_KEY, "false");
@@ -809,28 +922,6 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
             mSearchModuelDeletage.setCity(cityModel);
 
         }
-
-//        if (LPRMAP_ACTIVITY_START_NAVI_CODE == requestCode && resultCode == RESULT_OK) {
-//            mapView.setVisibility(View.INVISIBLE);
-//            mAMapNaviView.setVisibility(View.VISIBLE);
-//
-//            mAMapNavi = AMapNavi.getInstance(getApplicationContext());
-//            mAMapNavi.addAMapNaviListener(this);
-//            mAMapNavi.setUseInnerVoice(true);
-//            if(data.getStringExtra(NAVI_TYPE_KEY).equals("false")){ //模拟导航
-//                //模拟导航时的时速
-//                mAMapNavi.setEmulatorNaviSpeed(60);
-//                mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode); //模拟导航模式
-//            } else if(data.getStringExtra(NAVI_TYPE_KEY).equals("true")){
-//                mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
-//            }
-//
-//        } else if(LPRMAP_ACTIVITY_START_NAVI_CODE == requestCode && resultCode == RESULT_CANCELED){
-//            mapView.setVisibility(View.VISIBLE);
-//            mAMapNaviView.setVisibility(View.INVISIBLE);
-//            Toast.makeText(this, "路径出错， 本次导航取消", Toast.LENGTH_SHORT).show();
-//        }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -851,31 +942,275 @@ public class OfflineLprMapActivity extends BaseOcrActivity {
         //adapter.add(hphm, hpzl, hpzlStr, hpysStr);
     }
 
+    private boolean isNetworkConnected(Context context) {
+        if (context != null) {
+            ConnectivityManager mConnectivityManager = (ConnectivityManager) context
+                             .getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+            if (mNetworkInfo != null) {
+                return mNetworkInfo.isAvailable();
+            }
+        }
+        return false;
+    }
+
     @Override
     //安卓重写返回键事件
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode==KeyEvent.KEYCODE_BACK){
             if(mSearchModuelDeletage.getWidget(this).getVisibility() ==  View.VISIBLE){
                 mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
-            }  else {
+            } else if(mAMapNaviView.getVisibility() == View.VISIBLE){
+                onNaviCancel();
+            } else if(mapView.getVisibility() == View.VISIBLE) {
+
+            } else{
                 super.onKeyDown(keyCode, event);
             }
         }
         return true;
     }
 
-//    @Override
-//    public void activate(OnLocationChangedListener listener) {
-//        mListener = listener;
-//    }
-//
-//    @Override
-//    public void deactivate() {
-//        mListener = null;
-//        if (mLocationClient != null) {
-//            mLocationClient.stopLocation();
-//            mLocationClient.onDestroy();
-//        }
-//        mLocationClient = null;
-//    }
+    @Override
+    public void onInitNaviFailure() {
+        Toast.makeText(this, "init navi Failed", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onInitNaviSuccess() {
+    }
+
+    @Override
+    public void onStartNavi(int type) {
+
+    }
+
+    @Override
+    public void onTrafficStatusUpdate() {
+
+    }
+
+    @Override
+    public void onLocationChange(AMapNaviLocation location) {
+
+    }
+
+    @Override
+    public void onGetNavigationText(int type, String text) {
+
+    }
+
+    @Override
+    public void onGetNavigationText(String s) {
+
+    }
+
+    @Override
+    public void onEndEmulatorNavi() {
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onArriveDestination() {
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onCalculateRouteFailure(int errorInfo) {
+    }
+
+    @Override
+    public void onReCalculateRouteForYaw() {
+
+    }
+
+    @Override
+    public void onReCalculateRouteForTrafficJam() {
+
+    }
+
+    @Override
+    public void onArrivedWayPoint(int wayID) {
+
+    }
+
+    @Override
+    public void onGpsOpenStatus(boolean enabled) {
+    }
+
+    @Override
+    public void onNaviSetting() {
+        Toast.makeText(this,"全蓝", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNaviMapMode(int isLock) {
+
+    }
+
+    @Override
+    public void onNaviCancel() {
+        mapView.setVisibility(View.VISIBLE);
+        mAMapNaviView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onNaviTurnClick() {
+        Toast.makeText(this,"左上角转向", Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void onNextRoadClick() {
+
+    }
+
+    @Override
+    public void onScanViewButtonClick() {
+    }
+
+    @Deprecated
+    @Override
+    public void onNaviInfoUpdated(AMapNaviInfo naviInfo) {
+    }
+
+    @Override
+    public void updateCameraInfo(AMapNaviCameraInfo[] aMapNaviCameraInfos) {
+
+    }
+
+    @Override
+    public void updateIntervalCameraInfo(AMapNaviCameraInfo aMapNaviCameraInfo, AMapNaviCameraInfo aMapNaviCameraInfo1, int i) {
+
+    }
+
+    @Override
+    public void onServiceAreaUpdate(AMapServiceAreaInfo[] aMapServiceAreaInfos) {
+
+    }
+
+    @Override
+    public void onNaviInfoUpdate(NaviInfo naviinfo) {
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(TrafficFacilityInfo trafficFacilityInfo) {
+
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(AMapNaviTrafficFacilityInfo aMapNaviTrafficFacilityInfo) {
+
+    }
+
+    @Override
+    public void showCross(AMapNaviCross aMapNaviCross) {
+    }
+
+    @Override
+    public void hideCross() {
+    }
+
+    @Override
+    public void showModeCross(AMapModelCross aMapModelCross) {
+
+    }
+
+    @Override
+    public void hideModeCross() {
+
+    }
+
+    @Override
+    public void showLaneInfo(AMapLaneInfo[] laneInfos, byte[] laneBackgroundInfo, byte[] laneRecommendedInfo) {
+
+    }
+
+    @Override
+    public void showLaneInfo(AMapLaneInfo aMapLaneInfo) {
+
+    }
+
+    @Override
+    public void hideLaneInfo() {
+
+    }
+
+    @Override
+    public void onCalculateRouteSuccess(int[] ints) {
+
+    }
+
+    @Override
+    public void notifyParallelRoad(int i) {
+
+    }
+
+    @Override
+    public void OnUpdateTrafficFacility(AMapNaviTrafficFacilityInfo[] aMapNaviTrafficFacilityInfos) {
+
+    }
+
+    @Override
+    public void updateAimlessModeStatistics(AimLessModeStat aimLessModeStat) {
+
+    }
+
+    @Override
+    public void updateAimlessModeCongestionInfo(AimLessModeCongestionInfo aimLessModeCongestionInfo) {
+
+    }
+
+    @Override
+    public void onPlayRing(int i) {
+
+    }
+
+    @Override
+    public void onCalculateRouteSuccess(AMapCalcRouteResult aMapCalcRouteResult) {
+
+    }
+
+    @Override
+    public void onCalculateRouteFailure(AMapCalcRouteResult aMapCalcRouteResult) {
+
+    }
+
+    @Override
+    public void onNaviRouteNotify(AMapNaviRouteNotifyData aMapNaviRouteNotifyData) {
+
+    }
+
+    @Override
+    public void onGpsSignalWeak(boolean b) {
+        if(b){
+            //Toast.makeText(this,"GPS信号弱", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
+    public void onLockMap(boolean isLock) {
+    }
+
+    @Override
+    public void onNaviViewLoaded() {
+    }
+
+    @Override
+    public void onMapTypeChanged(int i) {
+
+    }
+
+    @Override
+    public void onNaviViewShowMode(int i) {
+
+    }
+
+    @Override
+    public boolean onNaviBackClick() {
+        return false;
+    }
 }
