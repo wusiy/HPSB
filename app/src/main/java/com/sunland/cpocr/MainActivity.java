@@ -4,22 +4,20 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Environment;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import java.io.File;
 import java.util.List;
-
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+import android.hardware.camera2.CaptureRequest;
+
 
 import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
-
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
     private static final int num = 123;//用于验证获取的权

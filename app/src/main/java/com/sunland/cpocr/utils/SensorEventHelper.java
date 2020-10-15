@@ -57,6 +57,7 @@ public class SensorEventHelper implements SensorEventListener {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ORIENTATION: {
                 float x = event.values[0];
+                Log.d("EEEEE", x + " ");
                 x += getScreenRotationOnPhone(mContext);
                 x %= 360.0F;
                 if (x > 180.0F)
