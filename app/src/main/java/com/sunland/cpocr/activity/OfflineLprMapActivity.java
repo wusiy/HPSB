@@ -18,6 +18,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -90,6 +91,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
+    private ImageButton ib_locate;
     //
     private AMapNaviView mAMapNaviView;
     private AMapNavi mAMapNavi;
@@ -149,6 +151,9 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         dialog.setMessage("正在使用GPS定位... 请到露天空旷处加速定位");
         dialog.show();
         dialog.setCanceledOnTouchOutside(false);
+
+        ib_locate  = findViewById(R.id.ib_locate);
+        ib_locate.getBackground().setAlpha(210);
         //获取地图控件引用
         mapView = (MapView) findViewById(R.id.mapview);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
@@ -156,18 +161,9 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         if (aMap == null) {
             aMap = mapView.getMap();
         }
+        //重新加载离线地图数据
+        aMap.setLoadOfflineData(true);
 
-        if (aMap == null) {
-            aMap = mapView.getMap();
-            // 创建一个设置放大级别的CameraUpdate
-            CameraUpdate cu = CameraUpdateFactory.zoomTo(15);
-            // 设置地图的默认放大级别
-            aMap.moveCamera(cu);
-            // 创建一个更改地图倾斜度的CameraUpdate
-            CameraUpdate tiltUpdate = CameraUpdateFactory.changeTilt(30);
-            // 改变地图的倾斜度
-            aMap.moveCamera(tiltUpdate);
-        }
         mSensorHelper = new SensorEventHelper(this);
         if (mSensorHelper != null) {
             mSensorHelper.registerSensorListener();
@@ -187,8 +183,6 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         initui();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        // 通过监听器监听GPS提供的定位信息的改变
         if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -201,41 +195,39 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, new LocationListener() {
             @Override
-            public void onLocationChanged(Location loc) {
+            public void onLocationChanged(Location location) {
                 // 使用GPS提供的定位信息来更新位置
                 if(dialog.isShowing()){
                     mLocating.setVisibility(View.GONE);
                     dialog.dismiss();
                 }
-                //updatePosition(loc);
-                addCircle(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLongitude()), fromGpsToAmap(loc).getAccuracy());//添加定位精度圆
-                addMarker(new LatLng(fromGpsToAmap(loc).getLatitude(), fromGpsToAmap(loc).getLocationType()));//添加定位图标
-                mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
-                lat = fromGpsToAmap(loc).getLatitude();
-                lgt = fromGpsToAmap(loc).getLatitude();
+                lat = fromGpsToAmap(location).getLatitude();
+                lgt = fromGpsToAmap(location).getLongitude();
                 if (isFirstLoc) {
                     dialog.dismiss();
                     mLocating.setVisibility(View.GONE);
                     //设置缩放级别
-                    aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
                     //将地图移动到定位点
-                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat, lgt)));
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat,lgt)));
                     isFirstLoc = false;
                 }
+                addCircle(new LatLng(lat, lgt), fromGpsToAmap(location).getAccuracy());//添加定位精度圆
+                addMarker(new LatLng(lat, lgt));//添加定位图标
+                mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
+                //aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat, lgt)));
                 if (istracing) {
-                    LatLng mylocation = new LatLng(fromGpsToAmap(loc).getLatitude(),
-                            fromGpsToAmap(loc).getLongitude());
-                    //  mListener.onLocationChanged(fromGpsToAmap(loc));// 显示系统小蓝点
+                    LatLng mylocation = new LatLng(lat, lgt);
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
-                    record.addpoint(fromGpsToAmap(loc));
+                    record.addpoint(fromGpsToAmap(location));
                     mPolyoptions.add(mylocation);
-                    mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(loc)));
+                    mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(location)));
                     redrawline();
                     if (mTracelocationlist.size() > tracesize - 1) {
                         trace();
                     }
                 }
-                loc = fromGpsToAmap(loc);
+                loc = fromGpsToAmap(location);
             }
 
             @Override
@@ -244,7 +236,6 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
 
             @Override
             public void onProviderEnabled(String provider) {
-                // 使用GPS提供的定位信息来更新位置
                 if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
@@ -255,10 +246,21 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
-                //updatePosition(locationManager.getLastKnownLocation(provider));
             }
             @Override
             public void onProviderDisabled(String provider) {
+            }
+        });
+
+        ib_locate.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(loc != null){
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(loc.getLatitude(), loc.getLongitude())));
+                } else{
+                    Toast.makeText(getApplicationContext(), "定位失败", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -319,6 +321,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         mStartTime = System.currentTimeMillis();
         record.setDate(getcueDate(mStartTime));
         aMap.clear(true);
+        mLocMarker = null;
         record.addpoint(lastRecord.getStartpoint());
         mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
                 lastRecord.getStartpoint().getLongitude()));
@@ -385,6 +388,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     mStartTime = System.currentTimeMillis();
                     record.setDate(getcueDate(mStartTime));
                     aMap.clear(true);
+                    mLocMarker = null;
                 } else{
                     item.setIcon(getResources().getDrawable(R.drawable.start1));
                     istracing = false;
@@ -457,17 +461,17 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
     }
 
     private void addMarker(LatLng latlng) {
-        Marker lastLocMarker = mLocMarker;
+        if(mLocMarker != null){
+            mLocMarker.setPosition(latlng);
+            return;
+        }
         MarkerOptions options = new MarkerOptions();
         options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
         options.anchor(0.5f, 0.5f);
         options.position(latlng);
         mLocMarker = aMap.addMarker(options);
-        mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
-        if (lastLocMarker != null) {
-            lastLocMarker.remove();
-        }
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
+        Toast.makeText(this, lat + "  __ " + lgt,Toast.LENGTH_LONG ).show();
     }
 
     protected void saveRecord(List<AMapLocation> list, String time) {

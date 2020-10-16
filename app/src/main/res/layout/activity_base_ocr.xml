@@ -79,6 +79,19 @@
                 android:scaleType="centerInside"
                 />
 
+            <ImageButton
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:id="@+id/ib_locate"
+                android:src="@drawable/locate"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/white"
+                android:scaleType="centerInside"
+                />
+
         </RelativeLayout>
 
 

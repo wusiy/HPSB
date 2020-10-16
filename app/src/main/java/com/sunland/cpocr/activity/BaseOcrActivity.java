@@ -113,8 +113,7 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-         actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         if (actionBar != null) {
             //actionBar.hide();
 //            actionBar.setHomeButtonEnabled(true);
@@ -140,7 +139,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
     }
 
     private void findView() {
-
         surfaceView = (SurfaceView) findViewById(R.id.surfaceViwe);
         re_c = (RelativeLayout) findViewById(R.id.re_c);
         DisplayMetrics metric = new DisplayMetrics();
@@ -150,10 +148,8 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
 
         if (myView == null) {
             myView = new LPRfinderView(BaseOcrActivity.this, width, height, bSerialMode);
-            Log.d("qqqqqq","ccc");
             re_c.addView(myView);
         }
-
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(BaseOcrActivity.this);
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);

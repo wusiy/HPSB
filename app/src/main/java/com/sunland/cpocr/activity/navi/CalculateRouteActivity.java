@@ -893,6 +893,7 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
             intent.putExtra(NAVI_TYPE_KEY, "cancle_navi");
             intent.putExtra(IS_TRACING_KEY, istracing);
             startActivity(intent);
+            finish();
         }
         return true;
     }

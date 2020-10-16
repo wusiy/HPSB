@@ -10,10 +10,12 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -33,10 +35,14 @@ import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
+import com.amap.api.maps.utils.SpatialRelationUtil;
+import com.amap.api.maps.utils.overlay.MovingPointOverlay;
+import com.amap.api.maps.utils.overlay.SmoothMoveMarker;
 import com.amap.api.navi.AMapNavi;
 import com.amap.api.navi.AMapNaviListener;
 import com.amap.api.navi.AMapNaviView;
@@ -71,13 +77,18 @@ import com.sunland.cpocr.activity.navi.CalculateRouteActivity;
 import com.sunland.cpocr.db.DbTracks;
 import com.sunland.cpocr.path_record.record.PathRecord;
 import com.sunland.cpocr.path_record.recorduitl.Util;
+import com.sunland.cpocr.path_record.tracereplay.TraceRePlay;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.DialogHelp;
 import com.sunland.cpocr.utils.SensorEventHelper;
+import com.sunland.cpocr.utils.TrackMoveUtil;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static com.autonavi.base.amap.mapcore.maploader.NetworkState.isNetworkConnected;
 
 public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener,
         TraceListener, AMapNaviListener, AMapNaviViewListener {
@@ -90,6 +101,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
+    private ImageButton ib_locate;
     //
     private AMapNaviView mAMapNaviView;
     private AMapNavi mAMapNavi;
@@ -152,6 +164,8 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         dialog.setMessage("正在定位...");
         dialog.show();
         dialog.setCanceledOnTouchOutside(false);
+        ib_locate = findViewById(R.id.ib_locate);
+        ib_locate.setVisibility(View.GONE);
         //获取地图控件引用
         mapView = (MapView) findViewById(R.id.mapview);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
@@ -237,6 +251,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mStartTime = System.currentTimeMillis();
         record.setDate(getcueDate(mStartTime));
         aMap.clear(true);
+        mLocMarker = null;
         record.addpoint(lastRecord.getStartpoint());
         mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
                 lastRecord.getStartpoint().getLongitude()));
@@ -332,6 +347,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     mStartTime = System.currentTimeMillis();
                     record.setDate(getcueDate(mStartTime));
                     aMap.clear(true);
+                    mLocMarker = null;
                 } else{
                     item.setIcon(getResources().getDrawable(R.drawable.start1));
                     istracing = false;
@@ -352,11 +368,13 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 break;
 
             case R.id.navi:
-                if(lat != 0) {
+                if(lat == 0) {
+                    Toast.makeText(this,"请等待初次定位完成后再使用导航", Toast.LENGTH_SHORT).show();
+                } else if(!isNetworkConnected(this)){
+                    Toast.makeText(this,"当前无网络连接，无法使用导航", Toast.LENGTH_SHORT).show();
+                } else{
                     mSearchModuelDeletage.setCurrLoc(loc);
                     mSearchModuelDeletage.getWidget(this).setVisibility(View.VISIBLE);
-                } else{
-                    Toast.makeText(this,"请等待初次定位完成后再使用导航", Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -415,25 +433,22 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
                     //将地图移动到定位点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
-                    //添加图钉
-                    // aMap.addMarker(getMarkerOptions(amapLocation));
-                    //Toast.makeText(getApplicationContext(), buffer.toString(), Toast.LENGTH_LONG).show();
                     isFirstLoc = false;
-                   mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-
+                    //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                 }
 //                addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
 //                addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
+//                mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
                 lgt = aMapLocation.getLongitude();
                 loc = aMapLocation;
                 LatLng mylocation = new LatLng(aMapLocation.getLatitude(),
                         aMapLocation.getLongitude());
-                //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-                aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
+                mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                //aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
                 if (istracing) {
-                    mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                    //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
                     record.addpoint(aMapLocation);
                     mPolyoptions.add(mylocation);
@@ -467,16 +482,15 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     }
 
     private void addMarker(LatLng latlng) {
-        Marker lastLocMarker = mLocMarker;
+        if(mLocMarker != null){
+            mLocMarker.setPosition(latlng);
+            return;
+        }
         MarkerOptions options = new MarkerOptions();
         options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
         options.anchor(0.5f, 0.5f);
         options.position(latlng);
         mLocMarker = aMap.addMarker(options);
-        mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
-        if (lastLocMarker != null) {
-            lastLocMarker.remove();
-        }
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
@@ -1198,7 +1212,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     @Override
     public void onGpsSignalWeak(boolean b) {
         if(b){
-            Toast.makeText(this,"GPS信号弱", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this,"GPS信号弱", Toast.LENGTH_SHORT).show();
         }
 
     }
