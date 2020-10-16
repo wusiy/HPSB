@@ -29,17 +29,18 @@ import com.amap.api.location.CoordinateConverter;
 import com.amap.api.location.DPoint;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapUtils;
-import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
+import com.amap.api.maps.utils.overlay.SmoothMoveMarker;
 import com.amap.api.navi.AMapNavi;
 import com.amap.api.navi.AMapNaviListener;
 import com.amap.api.navi.AMapNaviView;
@@ -207,7 +208,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     dialog.dismiss();
                     mLocating.setVisibility(View.GONE);
                     //设置缩放级别
-                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
                     //将地图移动到定位点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat,lgt)));
                     isFirstLoc = false;
@@ -462,7 +463,43 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
 
     private void addMarker(LatLng latlng) {
         if(mLocMarker != null){
-            mLocMarker.setPosition(latlng);
+            double[] coords = {lat,lgt,latlng.latitude,latlng.longitude};
+            List<LatLng> points = new ArrayList<LatLng>();
+            for (int i = 0; i < coords.length; i += 2) {
+                points.add(new LatLng(coords[i], coords[i + 1]));
+            }
+            LatLngBounds.Builder b = LatLngBounds.builder();
+            for (int i = 0 ; i < points.size(); i++) {
+                b.include(points.get(i));
+            }
+            LatLngBounds bounds = b.build();
+            //aMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            mLocMarker.setVisible(false);
+            mCircle.setVisible(false);
+            SmoothMoveMarker moveMarker = new SmoothMoveMarker(aMap);
+            // 设置滑动的图标
+            moveMarker.setDescriptor(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
+            moveMarker.setPoints(points);//设置平滑移动的轨迹list
+            moveMarker.setTotalDuration(1);//设置平滑移动的总时间
+            //moveMarker.getMarker().showInfoWindow();
+            moveMarker.setMoveListener(
+                    new SmoothMoveMarker.MoveListener() {
+                        @Override
+                        public void move(final double distance) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if(distance == 0){
+                                        moveMarker.removeMarker();
+                                        mLocMarker.setPosition(latlng);
+                                        mLocMarker.setVisible(true);
+                                        mCircle.setVisible(true);
+                                    }
+                                }
+                            });
+                        }
+                    });
+            moveMarker.startSmoothMove();
             return;
         }
         MarkerOptions options = new MarkerOptions();
@@ -471,7 +508,6 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         options.position(latlng);
         mLocMarker = aMap.addMarker(options);
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
-        Toast.makeText(this, lat + "  __ " + lgt,Toast.LENGTH_LONG ).show();
     }
 
     protected void saveRecord(List<AMapLocation> list, String time) {

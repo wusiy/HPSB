@@ -8,7 +8,7 @@ import com.amap.api.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrackMoveUtil {
+public class PointsUtil {
     private static double DISTANCE = 0.0001;
 
     /**
