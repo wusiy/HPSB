@@ -2,13 +2,10 @@ package com.sunland.cpocr.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import android.text.TextUtils;
 import android.widget.RelativeLayout;
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.amap.poisearch.searchmodule.CityChooseDelegate;
 import com.amap.poisearch.searchmodule.CityChooseWidget;
 import com.amap.poisearch.searchmodule.ICityChooseModule;
@@ -29,10 +26,8 @@ public class CityChooseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_city_choose);
-
-        RelativeLayout contentView = (RelativeLayout)findViewById(R.id.content_view);
+        RelativeLayout contentView = findViewById(R.id.content_view);
 
         mCityChooseDelegate = new CityChooseDelegate();
         mCityChooseDelegate.bindParentDelegate(mCityChooseParentDelegate);

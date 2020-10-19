@@ -30,7 +30,7 @@ public class TrackRecordActivity extends Activity implements OnItemClickListener
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.record_list);
-		mAllRecordListView = (ListView) findViewById(R.id.recordlist);
+		mAllRecordListView = findViewById(R.id.recordlist);
 		mDataBaseHelper = new DbTracks(this);
 		mDataBaseHelper.open();
 		searchAllRecordFromDB();

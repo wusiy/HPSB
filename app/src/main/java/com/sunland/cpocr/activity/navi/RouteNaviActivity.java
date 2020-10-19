@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
 import android.widget.Toast;
-
-import com.amap.api.maps.AMap;
 import com.amap.api.navi.AMapNavi;
 import com.amap.api.navi.AMapNaviListener;
 import com.amap.api.navi.AMapNaviView;
@@ -40,7 +38,7 @@ public class RouteNaviActivity extends Activity implements AMapNaviListener, AMa
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_basic_navi);
 
-		mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
+		mAMapNaviView = findViewById(R.id.navi_view);
 		mAMapNaviView.onCreate(savedInstanceState);
 		mAMapNaviView.setAMapNaviViewListener(this);
 

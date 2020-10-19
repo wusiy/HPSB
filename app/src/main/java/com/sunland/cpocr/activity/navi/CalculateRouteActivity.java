@@ -4,10 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -18,15 +15,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
-
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
-import com.amap.api.maps.model.LatLng;
 import com.amap.api.navi.AMapNavi;
 import com.amap.api.navi.AMapNaviListener;
-import com.amap.api.navi.enums.TravelStrategy;
 import com.amap.api.navi.model.AMapCalcRouteResult;
 import com.amap.api.navi.model.AMapLaneInfo;
 import com.amap.api.navi.model.AMapModelCross;
@@ -42,25 +36,17 @@ import com.amap.api.navi.model.AimLessModeCongestionInfo;
 import com.amap.api.navi.model.AimLessModeStat;
 import com.amap.api.navi.model.NaviInfo;
 import com.amap.api.navi.model.NaviLatLng;
-import com.amap.api.navi.model.NaviPoi;
 import com.amap.api.navi.view.RouteOverLay;
-
-import com.amap.poisearch.util.AMapUtil;
 import com.autonavi.tbt.TrafficFacilityInfo;
-import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.LprMapActivity;
-import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import com.sunland.cpocr.bean.StrategyBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
-
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.sunland.cpocr.activity.LprMapActivity.IS_TRACING_KEY;
-import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
+import static com.sunland.cpocr.MainActivity.IS_TRACING_KEY;
+import static com.sunland.cpocr.MainActivity.NAVI_TYPE_KEY;
 
 /**
  * 驾车路径规划并展示对应的路线标签
@@ -266,41 +252,41 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     }
 
     private void initView() {
-        mStartNaviButton = (Button) findViewById(R.id.calculate_route_start_navi);
+        mStartNaviButton = findViewById(R.id.calculate_route_start_navi);
         mStartNaviButton.setOnClickListener(this);
 
-        mImageTraffic = (ImageView) findViewById(R.id.map_traffic);
+        mImageTraffic = findViewById(R.id.map_traffic);
         mImageTraffic.setOnClickListener(this);
-        mImageStrategy = (ImageView) findViewById(R.id.strategy_choose);
+        mImageStrategy = findViewById(R.id.strategy_choose);
         mImageStrategy.setOnClickListener(this);
-        mImageNaviWay = (ImageView) findViewById(R.id.navi_way);
+        mImageNaviWay = findViewById(R.id.navi_way);
         mImageNaviWay.setOnClickListener(this);
 
-        naviWay = (TextView) findViewById(R.id.navi_way_text);
-        mCalculateRouteOverView = (TextView) findViewById(R.id.calculate_route_navi_overview);
+        naviWay = findViewById(R.id.navi_way_text);
+        mCalculateRouteOverView = findViewById(R.id.calculate_route_navi_overview);
 
-        mRouteLineLayoutOne = (LinearLayout) findViewById(R.id.route_line_one);
+        mRouteLineLayoutOne = findViewById(R.id.route_line_one);
         mRouteLineLayoutOne.setOnClickListener(this);
-        mRouteLinelayoutTwo = (LinearLayout) findViewById(R.id.route_line_two);
+        mRouteLinelayoutTwo = findViewById(R.id.route_line_two);
         mRouteLinelayoutTwo.setOnClickListener(this);
-        mRouteLineLayoutThree = (LinearLayout) findViewById(R.id.route_line_three);
+        mRouteLineLayoutThree = findViewById(R.id.route_line_three);
         mRouteLineLayoutThree.setOnClickListener(this);
 
-        mRouteViewOne = (View) findViewById(R.id.route_line_one_view);
-        mRouteViewTwo = (View) findViewById(R.id.route_line_two_view);
-        mRouteViewThree = (View) findViewById(R.id.route_line_three_view);
+        mRouteViewOne = findViewById(R.id.route_line_one_view);
+        mRouteViewTwo = findViewById(R.id.route_line_two_view);
+        mRouteViewThree = findViewById(R.id.route_line_three_view);
 
-        mRouteTextStrategyOne = (TextView) findViewById(R.id.route_line_one_strategy);
-        mRouteTextStrategyTwo = (TextView) findViewById(R.id.route_line_two_strategy);
-        mRouteTextStrategyThree = (TextView) findViewById(R.id.route_line_three_strategy);
+        mRouteTextStrategyOne = findViewById(R.id.route_line_one_strategy);
+        mRouteTextStrategyTwo = findViewById(R.id.route_line_two_strategy);
+        mRouteTextStrategyThree = findViewById(R.id.route_line_three_strategy);
 
-        mRouteTextTimeOne = (TextView) findViewById(R.id.route_line_one_time);
-        mRouteTextTimeTwo = (TextView) findViewById(R.id.route_line_two_time);
-        mRouteTextTimeThree = (TextView) findViewById(R.id.route_line_three_time);
+        mRouteTextTimeOne =  findViewById(R.id.route_line_one_time);
+        mRouteTextTimeTwo = findViewById(R.id.route_line_two_time);
+        mRouteTextTimeThree = findViewById(R.id.route_line_three_time);
 
-        mRouteTextDistanceOne = (TextView) findViewById(R.id.route_line_one_distance);
-        mRouteTextDistanceTwo = (TextView) findViewById(R.id.route_line_two_distance);
-        mRouteTextDistanceThree = (TextView) findViewById(R.id.route_line_three_distance);
+        mRouteTextDistanceOne = findViewById(R.id.route_line_one_distance);
+        mRouteTextDistanceTwo = findViewById(R.id.route_line_two_distance);
+        mRouteTextDistanceThree = findViewById(R.id.route_line_three_distance);
     }
 
     /**
@@ -340,10 +326,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     private void startNavi() {
         if (routeID != -1){
             mAMapNavi.selectRouteId(routeID);
-//            Intent gpsintent = new Intent(getApplicationContext(), RouteNaviActivity.class);
-//            gpsintent.putExtra("gps", false); // gps 为true为真实导航，为false为模拟导航
-//            startActivity(gpsintent);
-
             Intent intent = new Intent(CalculateRouteActivity.this, LprMapActivity.class);
             final String items[] = {"模拟导航", "实时导航"};
             AlertDialog dialog = new AlertDialog.Builder(this)

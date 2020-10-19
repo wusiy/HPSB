@@ -7,13 +7,10 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-
-
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.adapter.StrategyChooseAdapter;
 import com.sunland.cpocr.bean.StrategyStateBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 

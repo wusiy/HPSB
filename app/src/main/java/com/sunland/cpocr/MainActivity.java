@@ -8,18 +8,21 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.activity.OfflineLprMapActivity;
+
 import java.io.File;
 import java.util.List;
+
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
-import android.hardware.camera2.CaptureRequest;
-
-
-import static com.sunland.cpocr.activity.LprMapActivity.NAVI_TYPE_KEY;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
+    public static final String FAVTYPE_KEY = "favtype";
+    public static final String POIITEM_STR_KEY = "poiitem_str";
+    public static final String NAVI_TYPE_KEY = "navi";
+    public static final String IS_TRACING_KEY = "track";
     private static final int num = 123;//用于验证获取的权
     private String permissions[] = new String[]{
             Manifest.permission.WRITE_EXTERNAL_STORAGE,

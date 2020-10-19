@@ -18,13 +18,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 import androidx.appcompat.app.AlertDialog;
+
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.AMapOptions;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
@@ -67,6 +68,7 @@ import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
 import com.amap.poisearch.util.FavAddressUtil;
 import com.amap.poisearch.util.PoiItemDBHelper;
+
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.google.gson.Gson;
 import com.sunland.cpocr.R;
@@ -84,118 +86,148 @@ import java.util.Date;
 import java.util.List;
 
 import static com.autonavi.base.amap.mapcore.maploader.NetworkState.isNetworkConnected;
+import static com.sunland.cpocr.MainActivity.FAVTYPE_KEY;
+import static com.sunland.cpocr.MainActivity.IS_TRACING_KEY;
+import static com.sunland.cpocr.MainActivity.NAVI_TYPE_KEY;
+import static com.sunland.cpocr.MainActivity.POIITEM_STR_KEY;
 
 public class LprMapActivity extends BaseOcrActivity implements LocationSource, AMapLocationListener,
         TraceListener, AMapNaviListener, AMapNaviViewListener {
 
-    public static final String FAVTYPE_KEY = "favtype";
-    public static final String POIITEM_STR_KEY = "poiitem_str";
-    public static final String NAVI_TYPE_KEY = "navi";
-    public static final String IS_TRACING_KEY = "track";
+    private int tracesize = 30;
+    //当前定位经纬度
+    private double lat, lgt;
+    //目的地点经纬度
+    private double desLat, desLgt;
+    //巡逻轨迹记录的开始时间， 结束时间
+    private long mStartTime, mEndTime;
+    //此activity的初始化模式
+    private String initType;
+    //当前定位地点名, 目的地地点名
+    private String location, deslocation;
+    //是否开启轨迹追踪
+    private boolean istracing = false;
+    //是否继续上次的轨迹录制
+    private boolean continue_tracing = false;
+    //标识，用于判断是否只显示一次定位信息和用户重新定位
+    private boolean isFirstLoc = true;
+    //记录当前的位置
+    private Location loc;
+    private DbTracks DbHepler;
+    //巡逻轨迹记录
+    private PathRecord record;
+    //上一次的巡逻轨迹记录
+    private PathRecord lastRecord;
+    private TraceOverlay mTraceoverlay;
+    private List<TraceLocation> mTracelocationlist = new ArrayList<TraceLocation>();
+    private List<TraceOverlay> mOverlayList = new ArrayList<TraceOverlay>();
+    private SensorEventHelper mSensorHelper;
 
+    private ImageButton ib_locate;
+    private ImageView mLocating;
+    private ProgressDialog dialog;
+    //地图画线
+    private Polyline mpolyline;
+    private PolylineOptions mPolyoptions;
+    //自定义定位图标marker及定位范围圈
+    private Marker mLocMarker;
+    private MarkerOptions mLocMarkerOption;
+    private Circle mCircle;
+    //POI搜索模块View
+    private SearchModuleDelegate mSearchModuelDeletage;
     //AMap是地图对象
     private AMap aMap;
     private MapView mapView;
-    private ImageButton ib_locate;
-    //
     private AMapNaviView mAMapNaviView;
     private AMapNavi mAMapNavi;
-    private ImageView mLocating;
     //声明AMapLocationClient类对象，定位发起端
     private AMapLocationClient mLocationClient = null;
     //声明mLocationOption对象，定位参数
     public AMapLocationClientOption mLocationOption = null;
     //声明mListener对象，定位监听器
     private LocationSource.OnLocationChangedListener mListener = null;
-    //标识，用于判断是否只显示一次定位信息和用户重新定位
-    private boolean isFirstLoc = true;
-    //当前定位经纬度
-    private double lat;
-    private double lgt;
-    //目的地点经纬度
-    private double desLat;
-    private double desLgt;
-    //当前定位地点名
-    private String location;
-    //目的地点名
-    private String deslocation;
-    //是否开启轨迹追踪
-    private boolean istracing = false;
-    //是否继续上次的轨迹录制
-    private boolean continue_tracing = false;
-    //上一次的巡逻轨迹记录
-    private PathRecord lastRecord;
-    private PolylineOptions mPolyoptions;
-    private Polyline mpolyline;
-    private PathRecord record;
-    private long mStartTime;
-    private long mEndTime;
-    private ToggleButton btn;
-    private DbTracks DbHepler;
-    private List<TraceLocation> mTracelocationlist = new ArrayList<TraceLocation>();
-    private List<TraceOverlay> mOverlayList = new ArrayList<TraceOverlay>();
-    private List<AMapLocation> recordList = new ArrayList<AMapLocation>();
-    private int tracesize = 30;
-    private TraceOverlay mTraceoverlay;
-    private SearchModuleDelegate mSearchModuelDeletage;
-    private String startType;
-    private Location loc;
-    private ProgressDialog dialog;
-    private Marker mLocMarker;
-    private SensorEventHelper mSensorHelper;
-    private Circle mCircle;
-    private MarkerOptions options;
-    public static final String LOCATION_MARKER_FLAG = "mylocation";
+
+    private static final String LOCATION_MARKER_FLAG = "mylocation";
     private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
     private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
-    private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
-    private static int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
+    private static final int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
+    private static final int LPRMAP_ACTIVITY_REQUEST_CHOOSE_CITY_ADDRESS_CODE = 2;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initData();
+        initUi(savedInstanceState);
+        //定位相关设置
+        initLocating();
+    }
+
+    private void initData() {
         lat = 0;
         actionBar.setTitle("");
-        startType = getIntent().getStringExtra(NAVI_TYPE_KEY);
+        initType = getIntent().getStringExtra(NAVI_TYPE_KEY);
         dialog = new ProgressDialog(this);
+        mSensorHelper = new SensorEventHelper(this);
+        if (mSensorHelper != null) {
+            mSensorHelper.registerSensorListener();
+        }
+        initPolyline();
+    }
+
+    private void initPolyline() {
+        mPolyoptions = new PolylineOptions();
+        mPolyoptions.width(10f);
+        mPolyoptions.color(Color.BLUE);
+    }
+
+    private void initUi(Bundle savedInstanceState){
+
+        ib_locate = findViewById(R.id.ib_locate);
+        //获取地图控件引用
+        mapView = findViewById(R.id.mapview);
+        mAMapNaviView = findViewById(R.id.navi_view);
+        mLocating = findViewById(R.id.iv_locating);
+
+        ib_locate.setVisibility(View.INVISIBLE);
+        mLocating.setVisibility(View.VISIBLE);
+
         dialog.setMessage("正在定位...");
         dialog.show();
         dialog.setCanceledOnTouchOutside(false);
-        ib_locate = findViewById(R.id.ib_locate);
-        ib_locate.setVisibility(View.GONE);
-        //获取地图控件引用
-        mapView = (MapView) findViewById(R.id.mapview);
+
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，实现地图生命周期管理
         mapView.onCreate(savedInstanceState);
         if (aMap == null) {
             aMap = mapView.getMap();
         }
-        //设置显示定位按钮 并且可以点击
-        UiSettings settings = aMap.getUiSettings();
         aMap.setLocationSource((LocationSource) this);//设置了定位的监听
-        // aMap.reloadMap();
+        //显示定位层并且可以触发定位
+        aMap.setMyLocationEnabled(true);
+        UiSettings settings = aMap.getUiSettings();
+        //是否允许显示缩放按钮
+        settings.setZoomControlsEnabled(true);
+        //设置缩放按钮的位置
+        settings.setZoomPosition(AMapOptions.ZOOM_POSITION_RIGHT_BUTTOM);
+        //是否显示指南针
+        settings.setCompassEnabled(true);
         // 是否显示定位按钮
         settings.setMyLocationButtonEnabled(true);
-        aMap.setMyLocationEnabled(true);//显示定位层并且可以触发定位,默认是flase
-        mAMapNaviView = (AMapNaviView) findViewById(R.id.navi_view);
+        //是否显示控制比例尺控件
+        settings.setScaleControlsEnabled(true);
+        //设置logo位置, 默认左下角(不可移除)
+        settings.setLogoPosition(AMapOptions.LOGO_POSITION_BOTTOM_LEFT);
+        mTraceoverlay = new TraceOverlay(aMap);
+
         mAMapNaviView.onCreate(savedInstanceState);
         mAMapNaviView.setAMapNaviViewListener(this);
         mAMapNavi = AMapNavi.getInstance(getApplicationContext());
         mAMapNavi.addAMapNaviListener(this);
+        //是否打开语音导航
         mAMapNavi.setUseInnerVoice(true);
-        mLocating = findViewById(R.id.iv_locating);
-        mLocating.setVisibility(View.VISIBLE);
-        mTraceoverlay = new TraceOverlay(aMap);
-        initpolyline();
-        initui();
-        //开始定位
-        location();
-    }
 
-    private void initui(){
-        if(startType.equals("")){
+        if(initType.equals("")){
             mapView.setVisibility(View.VISIBLE);
             mAMapNaviView.setVisibility(View.INVISIBLE);
-        } else if(startType.equals("cancle_navi")){ //路径规划时取消导航
+        } else if(initType.equals("cancle_navi")){ //路径规划时取消导航
             mapView.setVisibility(View.VISIBLE);
             mAMapNaviView.setVisibility(View.INVISIBLE);
             //是否继续上次的巡逻轨迹记录
@@ -203,7 +235,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 continue_tracing = true;
                 continueTracing();
             }
-        } else if(startType.equals("false")){ //模拟导航
+        } else if(initType.equals("false")){ //模拟导航
             mapView.setVisibility(View.INVISIBLE);
             mAMapNaviView.setVisibility(View.VISIBLE);
             //是否继续上次的巡逻轨迹记录
@@ -216,7 +248,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             mAMapNavi.setUseInnerVoice(true);
             mAMapNavi.setEmulatorNaviSpeed(60);
             mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
-        } else if(startType.equals("true")){ //实时导航
+        } else if(initType.equals("true")){ //实时导航
             mapView.setVisibility(View.INVISIBLE);
             mAMapNaviView.setVisibility(View.VISIBLE);
             //是否继续上次的巡逻轨迹记录
@@ -231,57 +263,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         }
     }
 
-    //绘制上次记录的巡逻轨迹并继续
-    private void continueTracing(){
-        DbTracks dbhelper = new DbTracks(this.getApplicationContext());
-        dbhelper.open();
-        lastRecord = dbhelper.queryLastRecord();
-        dbhelper.close();
-
-        mpolyline = null;
-        initpolyline();
-        if (record != null) {
-            record = null;
-        }
-        record = new PathRecord();
-        mStartTime = System.currentTimeMillis();
-        record.setDate(getcueDate(mStartTime));
-        aMap.clear(true);
-        mLocMarker = null;
-        record.addpoint(lastRecord.getStartpoint());
-        mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
-                lastRecord.getStartpoint().getLongitude()));
-        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getStartpoint()));
-        redrawline();
-        if (mTracelocationlist.size() > tracesize - 1) {
-            trace();
-        }
-
-        for(int i = 0; i < lastRecord.getPathline().size(); i++){
-            record.addpoint(lastRecord.getPathline().get(i));
-            mPolyoptions.add(new LatLng(lastRecord.getPathline().get(i).getLatitude(),
-                    lastRecord.getPathline().get(i).getLongitude()));
-            mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getPathline().get(i)));
-            redrawline();
-            if (mTracelocationlist.size() > tracesize - 1) {
-                trace();
-            }
-        }
-        record.addpoint(lastRecord.getEndpoint());
-        mPolyoptions.add(new LatLng(lastRecord.getEndpoint().getLatitude(),
-                lastRecord.getEndpoint().getLongitude()));
-        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getEndpoint()));
-        redrawline();
-        if (mTracelocationlist.size() > tracesize - 1) {
-            trace();
-        }
-    }
-
-    private void location() {
-        mSensorHelper = new SensorEventHelper(this);
-        if (mSensorHelper != null) {
-            mSensorHelper.registerSensorListener();
-        }
+    private void initLocating() {
         //初始化定位
         mLocationClient = new AMapLocationClient(getApplicationContext());
         //设置定位回调监听
@@ -300,6 +282,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mLocationOption.setMockEnable(false);
         //设置定位间隔,单位毫秒,默认为2000ms
         mLocationOption.setInterval(2000);
+        //是否GPS优先
         mLocationOption.setGpsFirst(true);
         //给定位客户端对象设置定位参数
         mLocationClient.setLocationOption(mLocationOption);
@@ -307,21 +290,15 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mLocationClient.startLocation();
     }
 
-    private void initpolyline() {
-        mPolyoptions = new PolylineOptions();
-        mPolyoptions.width(10f);
-        mPolyoptions.color(Color.BLUE);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.actionbar_activity_lprmap,menu);
         Menu mMenu=menu;
         MenuItem item =mMenu.findItem(R.id.recording_track);
-         if(continue_tracing){
-             Toast.makeText(getApplicationContext(),"正在继续上次的巡逻轨迹录制",Toast.LENGTH_LONG).show();
-             item.setIcon(getResources().getDrawable(R.drawable.stop));
-             istracing = true;
+        if(continue_tracing){
+            Toast.makeText(getApplicationContext(),"正在继续上次的巡逻轨迹录制",Toast.LENGTH_LONG).show();
+            item.setIcon(getResources().getDrawable(R.drawable.stop));
+            istracing = true;
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -335,7 +312,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     item.setIcon(getResources().getDrawable(R.drawable.stop));
                     istracing = true;
                     mpolyline = null;
-                    initpolyline();
+                    initPolyline();
                     if (record != null) {
                         record = null;
                     }
@@ -388,6 +365,55 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         return super.onOptionsItemSelected(item);
     }
 
+    //绘制上次记录的巡逻轨迹并继续
+    private void continueTracing(){
+        aMap.clear(true);
+        mLocMarker = null;
+        mpolyline = null;
+        initPolyline();
+        mStartTime = System.currentTimeMillis();
+        DbTracks dbhelper = new DbTracks(this.getApplicationContext());
+        dbhelper.open();
+        //上一次的巡逻记录
+        lastRecord = dbhelper.queryLastRecord();
+        dbhelper.close();
+
+        if (record != null) {
+            record = null;
+        }
+        record = new PathRecord();
+        record.setDate(getcueDate(mStartTime));
+        //绘制上一次巡逻记录起点
+        record.addpoint(lastRecord.getStartpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
+                lastRecord.getStartpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getStartpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
+        }
+        //绘制上一次巡逻记录的中间点
+        for(int i = 0; i < lastRecord.getPathline().size(); i++){
+            record.addpoint(lastRecord.getPathline().get(i));
+            mPolyoptions.add(new LatLng(lastRecord.getPathline().get(i).getLatitude(),
+                    lastRecord.getPathline().get(i).getLongitude()));
+            mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getPathline().get(i)));
+            redrawline();
+            if (mTracelocationlist.size() > tracesize - 1) {
+                trace();
+            }
+        }
+        //绘制上一次巡逻记录的最后一个点
+        record.addpoint(lastRecord.getEndpoint());
+        mPolyoptions.add(new LatLng(lastRecord.getEndpoint().getLatitude(),
+                lastRecord.getEndpoint().getLongitude()));
+        mTracelocationlist.add(Util.parseTraceLocation(lastRecord.getEndpoint()));
+        redrawline();
+        if (mTracelocationlist.size() > tracesize - 1) {
+            trace();
+        }
+    }
+
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null) {
@@ -434,8 +460,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 }
                 //addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
                 //addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
-
-                mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
+                //mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                 location = buffer.toString();
                 lat = aMapLocation.getLatitude();
                 lgt = aMapLocation.getLongitude();
@@ -509,7 +534,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                     if(distance == 0){
                                         //若在移动mLocMarkers时map.clear()清空了此marker,则重新添加该marker
                                         if(mLocMarker == null){
-                                            mLocMarker = aMap.addMarker(options);
+                                            mLocMarker = aMap.addMarker(mLocMarkerOption);
                                         }
                                         moveMarker.removeMarker();
                                         mLocMarker.setPosition(latlng);
@@ -523,11 +548,11 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             moveMarker.startSmoothMove();
             return;
         }
-        options = new MarkerOptions();
-        options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
-        options.anchor(0.5f, 0.5f);
-        options.position(latlng);
-        mLocMarker = aMap.addMarker(options);
+        mLocMarkerOption = new MarkerOptions();
+        mLocMarkerOption.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
+        mLocMarkerOption.anchor(0.5f, 0.5f);
+        mLocMarkerOption.position(latlng);
+        mLocMarker = aMap.addMarker(mLocMarkerOption);
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
@@ -641,11 +666,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         Date curDate = new Date(time);
         String date = formatter.format(curDate);
         return date;
-    }
-
-    public void record(View view) {
-        Intent intent = new Intent(com.sunland.cpocr.activity.LprMapActivity.this, TrackRecordActivity.class);
-        startActivity(intent);
     }
 
     private void trace() {
@@ -767,17 +787,14 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 RelativeLayout.LayoutParams.MATCH_PARENT);
         //params.setMargins(frameRight + mSeekBar.getWidth() - 30, 0, 0, 0);
         params.setMargins(frameRight + mSeekBar.getWidth() + 170, 0, 0, 0);
-
         mapView.setBackgroundColor(Color.WHITE);
         mapView.setLayoutParams(params);
-        //mapView.setVisibility(View.INVISIBLE);
 
         RelativeLayout.LayoutParams navi_params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT);
         navi_params.setMargins(frameRight + mSeekBar.getWidth() -60, -300, -230, -300);
         mAMapNaviView.setBackgroundColor(Color.WHITE);
         mAMapNaviView.setLayoutParams(navi_params);
-        //mAMapNaviView.setVisibility(View.INVISIBLE);
 
         mSearchModuelDeletage = new SearchModuleDelegate();
         mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.DEST_POI_TYPE);
@@ -938,7 +955,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     //开始路径选择
     private void chooseRoute(){
         mSearchModuelDeletage.getWidget(this).setVisibility(View.INVISIBLE);
-
         AlertDialog.Builder builder = DialogHelp.getConfirmDialog(LprMapActivity.this,
                         "是否由 " + location + " 导航至 " + deslocation, new DialogInterface.OnClickListener() {
                             @Override
@@ -962,7 +978,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                 } else{
                                     intent.putExtra(IS_TRACING_KEY, "false");
                                 }
-                                //startActivityForResult(intent, LPRMAP_ACTIVITY_START_NAVI_CODE);
                                 startActivity(intent);
                                 finish();
                             }
@@ -995,7 +1010,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             Gson gson = new Gson();
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
-
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

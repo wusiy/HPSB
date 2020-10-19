@@ -69,13 +69,13 @@ public class RecordShowActivity extends Activity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_recorddiaplay);
-		mMapView = (MapView) findViewById(R.id.map);
+		mMapView = findViewById(R.id.map);
 		mMapView.onCreate(savedInstanceState);// 此方法必须重写
-		mGraspRadioButton = (RadioButton) findViewById(R.id.record_show_activity_grasp_radio_button);
-		mOriginRadioButton = (RadioButton) findViewById(R.id.record_show_activity_origin_radio_button);
+		mGraspRadioButton = findViewById(R.id.record_show_activity_grasp_radio_button);
+		mOriginRadioButton = findViewById(R.id.record_show_activity_origin_radio_button);
 		mOriginRadioButton.setOnClickListener(this);
 		mGraspRadioButton.setOnClickListener(this);
-		mDisplaybtn = (ToggleButton) findViewById(R.id.displaybtn);
+		mDisplaybtn = findViewById(R.id.displaybtn);
 		mDisplaybtn.setOnClickListener(this);
 		Intent recordIntent = getIntent();
 		int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 3;
@@ -94,7 +94,6 @@ public class RecordShowActivity extends Activity implements
 		}
 	}
 
-	
 	private void startMove() {
 		if(mRePlay !=null){
 			mRePlay.stopTrace();
@@ -196,7 +195,6 @@ public class RecordShowActivity extends Activity implements
 			b.include(mOriginLatLngList.get(i));
 		}
 		return b.build();
-
 	}
 
 	/**

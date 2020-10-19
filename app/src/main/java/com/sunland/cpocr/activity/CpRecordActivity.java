@@ -43,11 +43,11 @@ public class CpRecordActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        iv_cp = (ImageView) findViewById(R.id.iv_cp);
-        recyclerView_cphm = (RecyclerView) findViewById(R.id.recycler_cplist);
+        iv_cp = findViewById(R.id.iv_cp);
+        recyclerView_cphm = findViewById(R.id.recycler_cplist);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView_cphm.setLayoutManager(layoutManager);
-        recyclerView_cpzp = (RecyclerView) findViewById(R.id.recycler_cpphotolist);
+        recyclerView_cpzp = findViewById(R.id.recycler_cpphotolist);
         LinearLayoutManager layoutManager1 = new LinearLayoutManager(this);
         recyclerView_cpzp.setLayoutManager(layoutManager1);
 

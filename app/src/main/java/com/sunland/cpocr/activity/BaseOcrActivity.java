@@ -35,15 +35,12 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Toast;
-
 import com.sunland.cpocr.R;
 import com.lpr.LPR;
 import com.sunland.cpocr.db.DbCpHmZp;
 import com.sunland.cpocr.utils.CpocrUtils;
 import com.sunland.cpocr.utils.VerticalSeekBar;
 import com.sunland.cpocr.view.LPRfinderView;
-
-
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,7 +51,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
 
 public abstract class BaseOcrActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback {
     private static final String TAG = "ocr";

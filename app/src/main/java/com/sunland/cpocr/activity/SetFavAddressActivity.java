@@ -2,23 +2,17 @@ package com.sunland.cpocr.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import android.widget.RelativeLayout;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.amap.api.services.core.PoiItem;
 import com.amap.poisearch.searchmodule.ISearchModule;
 import com.amap.poisearch.searchmodule.ISearchModule.IDelegate.IParentDelegate;
 import com.amap.poisearch.searchmodule.SearchModuleDelegate;
 import com.amap.poisearch.util.CityModel;
 import com.google.gson.Gson;
-import com.sunland.cpocr.MainActivity;
 import com.sunland.cpocr.R;
-
-import static com.sunland.cpocr.activity.LprMapActivity.FAVTYPE_KEY;
-import static com.sunland.cpocr.activity.LprMapActivity.POIITEM_STR_KEY;
+import static com.sunland.cpocr.MainActivity.FAVTYPE_KEY;
+import static com.sunland.cpocr.MainActivity.POIITEM_STR_KEY;
 
 /**
  * Created by liangchao_suxun on 2017/4/28.
@@ -27,11 +21,8 @@ import static com.sunland.cpocr.activity.LprMapActivity.POIITEM_STR_KEY;
 public class SetFavAddressActivity extends AppCompatActivity {
 
     private SearchModuleDelegate mSearchModuelDeletage;
-
     private int mFavType = 0;
-
     public static final String CURR_CITY_KEY = "curr_city_key";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +36,10 @@ public class SetFavAddressActivity extends AppCompatActivity {
             mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.SET_HOME_TYPE);
         } else if(mFavType == 1){
             mSearchModuelDeletage.setPoiType(ISearchModule.IDelegate.SET_COMPANY_TYPE);
-
         }
         mSearchModuelDeletage.bindParentDelegate(mSearchModuleParentDelegate);
         contentView.addView(mSearchModuelDeletage.getWidget(this));
-
         mSearchModuelDeletage.setFavAddressVisible(false);
-
-
     }
 
     @Override
@@ -64,7 +51,7 @@ public class SetFavAddressActivity extends AppCompatActivity {
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
         } catch (Exception e) {
-            ;
+
         }
     }
 
@@ -111,7 +98,6 @@ public class SetFavAddressActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         // 表示结果来自城市选择actiivty
         if (requestCode == 1 && requestCode == RESULT_OK) {
             String currCityStr = data.getStringExtra(CityChooseActivity.CURR_CITY_KEY);
@@ -119,7 +105,6 @@ public class SetFavAddressActivity extends AppCompatActivity {
             CityModel cityModel = gson.fromJson(currCityStr, CityModel.class);
             mSearchModuelDeletage.setCity(cityModel);
         }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 }
