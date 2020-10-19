@@ -144,6 +144,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
     private Marker mLocMarker;
     private SensorEventHelper mSensorHelper;
     private Circle mCircle;
+    private MarkerOptions options;
     public static final String LOCATION_MARKER_FLAG = "mylocation";
     private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
     private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
@@ -429,7 +430,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     //将地图移动到定位点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                     isFirstLoc = false;
-                    //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                    mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                 }
                 //addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
                 //addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
@@ -444,7 +445,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                 //aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
                 if (istracing) {
-                    //mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
+                    mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
                     record.addpoint(aMapLocation);
                     mPolyoptions.add(mylocation);
@@ -506,6 +507,10 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                 @Override
                                 public void run() {
                                     if(distance == 0){
+                                        //若在移动mLocMarkers时map.clear()清空了此marker,则重新添加该marker
+                                        if(mLocMarker == null){
+                                            mLocMarker = aMap.addMarker(options);
+                                        }
                                         moveMarker.removeMarker();
                                         mLocMarker.setPosition(latlng);
                                         mLocMarker.setVisible(true);
@@ -518,7 +523,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             moveMarker.startSmoothMove();
             return;
         }
-        MarkerOptions options = new MarkerOptions();
+        options = new MarkerOptions();
         options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
         options.anchor(0.5f, 0.5f);
         options.position(latlng);

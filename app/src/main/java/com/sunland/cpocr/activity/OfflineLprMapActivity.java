@@ -137,6 +137,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
     private Marker mLocMarker;
     private SensorEventHelper mSensorHelper;
     private Circle mCircle;
+    private MarkerOptions options;
     public static final String LOCATION_MARKER_FLAG = "mylocation";
 
     private static int LPRMAP_ACTIVITY_REQUEST_FAV_ADDRESS_CODE = 1;
@@ -490,6 +491,10 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                                 @Override
                                 public void run() {
                                     if(distance == 0){
+                                        //若在移动mLocMarkers时map.clear()清空了此marker,则重新添加该marker
+                                        if(mLocMarker == null){
+                                            mLocMarker = aMap.addMarker(options);
+                                        }
                                         moveMarker.removeMarker();
                                         mLocMarker.setPosition(latlng);
                                         mLocMarker.setVisible(true);
@@ -502,7 +507,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
             moveMarker.startSmoothMove();
             return;
         }
-        MarkerOptions options = new MarkerOptions();
+        options = new MarkerOptions();
         options.icon(BitmapDescriptorFactory.fromView(this.getLayoutInflater().inflate(R.layout.located_marker,null)));
         options.anchor(0.5f, 0.5f);
         options.position(latlng);
