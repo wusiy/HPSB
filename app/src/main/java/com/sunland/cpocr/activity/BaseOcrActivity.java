@@ -629,7 +629,7 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                     String pathPhoto = saveMyBitmap(bmp);
                     DbHepler = new DbCpHmZp(this);
                     DbHepler.open();
-                    DbHepler.save_carinfo(hphm,pathPhoto);
+                    DbHepler.save_carinfo(hphm, hpysStr, pathPhoto);
                     DbHepler.close();
 
                     intent.putExtra(EXTRA_RET_HPHM, hphm);

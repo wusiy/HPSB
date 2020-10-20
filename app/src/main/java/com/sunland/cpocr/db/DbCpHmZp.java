@@ -19,16 +19,18 @@ import java.util.List;
 public class DbCpHmZp {
     public static final String KEY_ROWID = "id";
     public static final String KEY_CPHM = "carnum";
+    public static final String KEY_CPZL = "carzl";
     public static final String KEY_PHOTOS = "carphoto";
     private final static String DATABASE_PATH = android.os.Environment
             .getExternalStorageDirectory().getAbsolutePath() + "/HPSB/recordPhotoPath";
     static final String DATABASE_NAME = DATABASE_PATH + "/" + "recordphoto.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
     private static final String RECORD_TABLE = "record_numphoto";
     private static final String RECORD_CREATE = "create table if not exists record_numphoto("
             + KEY_ROWID
             + " integer primary key autoincrement,"
             + "carnum STRING,"
+            + "carzl STRING,"
             + "carphoto STRING" + ");";
 
     public static class DatabaseHelper extends SQLiteOpenHelper {
@@ -83,10 +85,11 @@ public class DbCpHmZp {
      * @param carphoto
      * @return
      */
-    public long add_newcar(String carnum, String carphoto) {
+    public long add_newcar(String carnum, String cartype, String carphoto) {
         ContentValues args = new ContentValues();
-        args.put("carnum", carnum);
-        args.put("carphoto", carphoto);
+        args.put(KEY_CPHM, carnum);
+        args.put(KEY_CPZL, cartype);
+        args.put(KEY_PHOTOS, carphoto);
         return db.insert(RECORD_TABLE, null, args);
     }
 
@@ -96,11 +99,14 @@ public class DbCpHmZp {
      * @param carphoto
      * @return
      */
-    public long add_carphoto( String carnum, String carphoto) {
+    public long add_carphoto( String carnum, String cartype, String carphoto) {
+        String where1 = KEY_CPHM + "=?";
+        String where2 = KEY_CPZL + "=?";
         ContentValues args = new ContentValues();
-        args.put("carnum", carnum);
-        args.put("carphoto", carphoto);
-        return db.update(RECORD_TABLE, args, "carnum=?",new String[]{carnum});
+        args.put(KEY_CPHM, carnum);
+        args.put(KEY_CPZL, cartype);
+        args.put(KEY_PHOTOS, carphoto);
+        return db.update(RECORD_TABLE, args, where1 + " and " + where2,new String[]{carnum, cartype});
     }
 
     /**
@@ -108,39 +114,16 @@ public class DbCpHmZp {
      * @param carnum
      * @param carphoto
      */
-    public void save_carinfo(String carnum, String carphoto) {
-        String record = queryRecordByCarNum(carnum);
+    public void save_carinfo(String carnum, String cartype, String carphoto) {
+        String record = queryRecordByCarNum(carnum, cartype);
         long i = 0;
         if(record.equals("")){
-            i = add_newcar( carnum,  carphoto);
+            i = add_newcar( carnum,  cartype, carphoto);
         }else{
             String s =  carphoto + "|" + record;
             Log.d("PPP", s);
-            i = add_carphoto( carnum,  s);
+            i = add_carphoto( carnum,  cartype, s);
         }
-    }
-
-    /**
-     * 查询所有车牌及照片记录
-     *
-     * @return
-     */
-    public List<String> queryRecordAll() {
-        List<String> allRecord = new ArrayList<String>();
-        Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
-                null, null, null, null);
-        while (allRecordCursor.moveToNext()) {
-            String record = "";
-            record = allRecordCursor.getInt(allRecordCursor
-                    .getColumnIndex(DbCpHmZp.KEY_ROWID)) + "|" +
-                    allRecordCursor.getString(allRecordCursor
-                            .getColumnIndex(DbCpHmZp.KEY_CPHM)) + "|" +
-                    allRecordCursor.getString(allRecordCursor.getColumnIndex(DbCpHmZp.KEY_PHOTOS));
-
-            allRecord.add(record);
-        }
-        Collections.reverse(allRecord);
-        return allRecord;
     }
 
     /**
@@ -154,10 +137,8 @@ public class DbCpHmZp {
                 null, null, null, null);
         while (allRecordCursor.moveToNext()) {
             String record = "";
-            record =
-                    allRecordCursor.getString(allRecordCursor
-                            .getColumnIndex(DbCpHmZp.KEY_CPHM));
-
+            record = allRecordCursor.getString(allRecordCursor.getColumnIndex(DbCpHmZp.KEY_CPHM)) + "|" +
+                    allRecordCursor.getString(allRecordCursor.getColumnIndex(DbCpHmZp.KEY_CPZL));
             allRecord.add(record);
         }
         Collections.reverse(allRecord);
@@ -165,38 +146,19 @@ public class DbCpHmZp {
     }
 
     /**
-     * 按照id查询
-     *
-     * @param mRecordItemId
-     * @return
-     */
-    public String queryRecordById(int mRecordItemId) {
-        String where = KEY_ROWID + "=?";
-        String[] selectionArgs = new String[] { String.valueOf(mRecordItemId) };
-        Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
-                selectionArgs, null, null, null);
-        String record = "";
-
-        if (cursor.moveToNext()) {
-            record = cursor.getInt(cursor.getColumnIndex(DbCpHmZp.KEY_ROWID)) + "|"
-                    + cursor.getString(cursor.getColumnIndex(DbCpHmZp.KEY_CPHM)) + "|"
-                    + cursor.getString(cursor.getColumnIndex(DbCpHmZp.KEY_PHOTOS));
-        }
-        return record;
-    }
-
-
-    /**
-     * 按照车牌号查询
+     * 按照车牌号, 车牌种类查询
      *
      * @param mCarNum
      * @return
      */
-    public String queryRecordByCarNum(String mCarNum) {
-        String where = KEY_CPHM + "=?";
-        String[] selectionArgs = new String[] { String.valueOf(mCarNum) };
-        Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
-                selectionArgs, null, null, null);
+    public String queryRecordByCarNum(String mCarNum, String mCartype) {
+        String where1 = KEY_CPHM + "=?";
+        String where2 = KEY_CPZL + "=?";
+//        String[] selectionArgs = new String[] { String.valueOf(mCarNum) };
+//        Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
+//                selectionArgs, null, null, null);
+        Cursor cursor=db.query(RECORD_TABLE,null,where1 + " and " + where2,
+                new String[]{mCarNum,mCartype},null,null,null);
         String record = "";
 
         if (cursor.moveToNext()) {
@@ -209,16 +171,14 @@ public class DbCpHmZp {
      * 删除一条车牌记录
      * @return
      */
-    public boolean deleteOneCpHmZp(String cphm ) {
-        return db.delete(RECORD_TABLE, "carnum=?", new String[] { String.valueOf(cphm)}) > 0;
+    public boolean deleteOneCpHmZp(String cphm,String cpzl ) {
+        String where1 = KEY_CPHM + "=?";
+        String where2 = KEY_CPZL + "=?";
+        return db.delete(RECORD_TABLE, where1 + " and " + where2, new String[] { cphm, cpzl}) > 0;
     }
-
 
 
     private String[] getColumns() {
-        return new String[] { KEY_ROWID, KEY_CPHM, KEY_PHOTOS, };
+        return new String[] { KEY_ROWID, KEY_CPHM, KEY_CPZL, KEY_PHOTOS, };
     }
-
-
-
 }

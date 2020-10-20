@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import android.util.Log;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +19,8 @@ import java.util.List;
 
 public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
 
+    private int selected_position = -1, cancel_selected_position = -1;
+    private Drawable selected_drawable, empty_drawable;
     private String[] mData = null;
     private OnScrollTargetPositionListener listener;
     private List<String> mContext;
@@ -63,7 +65,14 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         }
         Bitmap bitmap  = BitmapFactory.decodeStream(fis);
         viewHolder.ivCpzp.setImageBitmap(bitmap);
-        //viewHolder.tvCphm.setText(info);
+        if(position == cancel_selected_position){
+            viewHolder.ivCpzp.setForeground(empty_drawable);
+            cancel_selected_position = -1;
+        }
+
+        if(position == selected_position){
+            viewHolder.ivCpzp.setForeground(selected_drawable);
+        }
 
         if (mOnItemOnClickListener != null) {
             int finalPosition1 = position;
@@ -73,7 +82,7 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
             });
 
             viewHolder.itemView.setOnClickListener(view -> {
-                mOnItemOnClickListener.onItemDetailBtnClick(viewHolder.itemView, info);
+                mOnItemOnClickListener.onItemDetailBtnClick(viewHolder.itemView, info, finalPosition1);
             });
         }
     }
@@ -85,8 +94,8 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
    */
     public void add_one_zp(String zp) {
             notifyItemInserted(getItemCount() - 1);
-            if (listener != null)
-                listener.scrollToPosition(getItemCount() - 1);
+//            if (listener != null)
+//                listener.scrollToPosition(getItemCount() - 1);
     }
 
     /**
@@ -124,6 +133,17 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
         notifyDataSetChanged();
     }
 
+    public void select_one_zp(int position, Drawable grayCover, Drawable emptyCover){
+        selected_drawable = grayCover;
+        empty_drawable = emptyCover;
+        if(selected_position != -1){
+            cancel_selected_position = selected_position;
+            notifyItemChanged(cancel_selected_position);
+        }
+        selected_position = position;
+        notifyItemChanged(selected_position);
+    }
+
     @Override
     public int getItemCount () {
         return mData.length;
@@ -140,7 +160,7 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
     public interface OnItemOnClickListener {
         void onItemLongClock(View view, int pos);
 
-        void onItemDetailBtnClick(View view, String cphm);
+        void onItemDetailBtnClick(View view, String cpzp, int position);
     }
 
 }

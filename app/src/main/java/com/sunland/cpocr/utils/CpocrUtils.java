@@ -38,7 +38,7 @@ public final class CpocrUtils {
             hpzlStr = "使馆汽车";
         } else if (hphm.endsWith("领")) {
             hpzl = "04";
-            hpysStr = "领馆汽车";
+            hpzlStr = "领馆汽车";
         } else if (hphm.endsWith("警")) {
             hpzl = "23";
             hpzlStr = "警用汽车";

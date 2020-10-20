@@ -1027,8 +1027,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         final String[] hpzls = CpocrUtils.getHpzlFromOcr(hphm, hpysStr);
         final String hpzl = hpzls[0];
         final String hpzlStr = hpzls[1];
-        Toast.makeText(this,hphm,Toast.LENGTH_SHORT).show();
-        //adapter.add(hphm, hpzl, hpzlStr, hpysStr);
+        Toast.makeText(this,hphm + hpzlStr + hpzl,Toast.LENGTH_SHORT).show();
     }
 
     @Override

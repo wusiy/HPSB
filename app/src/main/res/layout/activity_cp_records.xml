@@ -15,9 +15,8 @@
 
     <ImageView
         android:layout_width="0dp"
-        android:layout_marginLeft="10dp"
         android:layout_height="match_parent"
-        android:layout_weight="3"
+        android:layout_weight="4"
         android:src="@color/white_color"
         android:id = "@+id/iv_cp"/>
 
@@ -25,9 +24,7 @@
         android:id="@+id/recycler_cpphotolist"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
+        android:layout_weight="1"
         />
-
-
 
 </android.widget.LinearLayout>

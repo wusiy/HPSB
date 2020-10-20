@@ -1,33 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="1dp"
+    android:layout_marginLeft="2dp"
+    android:layout_marginRight="2dp">
 
     <LinearLayout
-        android:id="@+id/ll_cphm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tv_cphm"
-            android:layout_width="match_parent"
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#666666" />
+
+        <LinearLayout
+            android:id="@+id/ll_cphm"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="2dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:text="浙A1111111"
-            android:textSize="20dp"
-            android:textColor="@color/result_view" />
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@color/card_num_color"/>
+            android:orientation="vertical">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#666666" />
 
+            <TextView
+                android:id="@+id/tv_cphm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="2dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="浙A1111111"
+                android:gravity="center"
+                android:textColor="@color/result_view"
+                android:textSize="17dp" />
 
+            <TextView
+                android:id="@+id/tv_hpzl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="2dp"
+                android:layout_marginBottom="5dp"
+                android:gravity="left"
+                android:text="小型新能源汽车"
+                android:textColor="@color/result_view"
+                android:textSize="12dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#666666" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#666666" />
     </LinearLayout>
-
-
-
-
 </RelativeLayout>
