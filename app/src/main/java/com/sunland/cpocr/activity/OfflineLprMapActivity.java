@@ -8,9 +8,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.GpsSatellite;
+import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -89,7 +94,9 @@ import com.sunland.cpocr.utils.SensorEventHelper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import static com.sunland.cpocr.MainActivity.FAVTYPE_KEY;
 import static com.sunland.cpocr.MainActivity.IS_TRACING_KEY;
@@ -177,6 +184,22 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+                List<Address> result = null;
+                try {
+                    if (location != null) {
+                        Geocoder gc = new Geocoder(OfflineLprMapActivity.this, Locale.getDefault());
+                        result = gc.getFromLocation(location.getLatitude(),
+                                location.getLongitude(), 1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if(result != null){
+                    Toast.makeText(OfflineLprMapActivity.this, result.get(0).getCountryName() + result.get(0).getLocality()
+                    + result.get(0).getSubLocality() + result.get(0).getAdminArea() + result.get(0).getSubAdminArea() + result.get(0).getThoroughfare()
+                    + result.get(0).getSubThoroughfare() + result.get(0).getPremises(), Toast.LENGTH_SHORT).show();
+                }
+
                 // 使用GPS提供的定位信息来更新位置
                 if(dialog.isShowing()){
                     mLocating.setVisibility(View.GONE);
@@ -213,25 +236,65 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
 
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
+                switch (status) {
+                    // GPS状态为可见时
+                    case LocationProvider.AVAILABLE:
+                        Toast.makeText(OfflineLprMapActivity.this, "GPS状态:可见", Toast.LENGTH_SHORT).show();
+                        break;
+                    // GPS状态为服务区外时
+                    case LocationProvider.OUT_OF_SERVICE:
+                        Toast.makeText(OfflineLprMapActivity.this, "GPS状态:服务区外", Toast.LENGTH_SHORT).show();
+                        break;
+                    // GPS状态为暂停服务时
+                    case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                        Toast.makeText(OfflineLprMapActivity.this, "GPS状态:服务暂停", Toast.LENGTH_SHORT).show();
+                        break;
+                }
             }
 
             @Override
             public void onProviderEnabled(String provider) {
-                if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
             }
             @Override
             public void onProviderDisabled(String provider) {
             }
         });
+
+        // 状态监听
+        GpsStatus.Listener listener = new GpsStatus.Listener() {
+            public void onGpsStatusChanged(int event) {
+                switch (event) {
+                    // 第一次定位
+                    case GpsStatus.GPS_EVENT_FIRST_FIX:
+                        Toast.makeText(OfflineLprMapActivity.this,"第一次定位成功", Toast.LENGTH_SHORT).show();
+                        break;
+                    // 卫星状态改变
+                    case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                        Toast.makeText(OfflineLprMapActivity.this,"卫星状态改变", Toast.LENGTH_SHORT).show();
+                        GpsStatus gpsStatus = locationManager.getGpsStatus(null);
+                        // 获取卫星颗数的默认最大值
+                        int maxSatellites = gpsStatus.getMaxSatellites();
+                        // 创建一个迭代器保存所有卫星
+                        Iterator<GpsSatellite> iters = gpsStatus.getSatellites()
+                                .iterator();
+                        int count = 0;
+                        while (iters.hasNext() && count <= maxSatellites) {
+                            GpsSatellite s = iters.next();
+                            count++;
+                        }
+                        Toast.makeText(OfflineLprMapActivity.this,"搜索到：" + count + "颗卫星", Toast.LENGTH_SHORT).show();
+                        break;
+                    // 定位启动
+                    case GpsStatus.GPS_EVENT_STARTED:
+                        Toast.makeText(OfflineLprMapActivity.this,"定位启动", Toast.LENGTH_SHORT).show();
+                        break;
+                    // 定位结束
+                    case GpsStatus.GPS_EVENT_STOPPED:
+                        Toast.makeText(OfflineLprMapActivity.this,"定位结束", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        };
 
         ib_locate.setOnClickListener(new View.OnClickListener(){
             @Override

@@ -123,8 +123,8 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
     public void add_one_hphm(String hphmzl) {
             mData.add(hphmzl);
             notifyItemInserted(getItemCount() - 1);
-            if (listener != null)
-                listener.scrollToPosition(getItemCount() - 1);
+//            if (listener != null)
+//                listener.scrollToPosition(getItemCount() - 1);
     }
 
     /**

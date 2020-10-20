@@ -165,6 +165,37 @@ public class DbTracks {
 	}
 
 	/**
+	 * 按照时间查询
+	 * @param mRecordItemId
+	 * @return
+	 */
+	public PathRecord queryRecordByTime(String date){
+		String where = KEY_DATE + "=?";
+		String[] selectionArgs = new String[] { String.valueOf(date) };
+		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
+				selectionArgs, null, null, null);
+		PathRecord record = new PathRecord();
+		if (cursor.moveToNext()) {
+			record.setId(cursor.getInt(cursor
+					.getColumnIndex(DbTracks.KEY_ROWID)));
+			record.setDistance(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DISTANCE)));
+			record.setDuration(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DURATION)));
+			record.setDate(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_DATE)));
+			String lines = cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_LINE));
+			record.setPathline(Util.parseLocations(lines));
+			record.setStartpoint(Util.parseLocation(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STRAT))));
+			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_END))));
+		}
+		return record;
+	}
+
+	/**
 	 * 按照id查询
 	 * @param mRecordItemId
 	 * @return
@@ -204,7 +235,6 @@ public class DbTracks {
 				null, null, null, null);
 		PathRecord record = new PathRecord();
 		while (allRecordCursor.moveToNext()) {
-
 			record.setId(allRecordCursor.getInt(allRecordCursor
 					.getColumnIndex(DbTracks.KEY_ROWID)));
 			record.setDistance(allRecordCursor.getString(allRecordCursor

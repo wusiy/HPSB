@@ -163,6 +163,7 @@ public class CpRecordActivity extends AppCompatActivity {
                                     cpzpAdapter.notifyItemRemoved(0);
                                     cpzpAdapter.notifyDataSetChanged();
                                 }
+                                cpzpAdapter.notifyDataSetChanged();
                             }
                             Toast.makeText(com.sunland.cpocr.activity.CpRecordActivity.this,
                                     CpocrUtils.getHpzlFromOcr(cphm, cpzl)[1] + " " + cphm + " 的相关数据已删除",Toast.LENGTH_LONG).show();

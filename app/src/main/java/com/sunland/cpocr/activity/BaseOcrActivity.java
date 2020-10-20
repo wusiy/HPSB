@@ -120,7 +120,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         LPR.getInstance().copyDataBase(this);
         bSerialMode = isSerialMode();
         setContentView(R.layout.activity_base_ocr);
-       // mapView.setVisibility(View.GONE);
         findView();
     }
 
@@ -182,7 +181,7 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                 finish();
             }
         });
-        mSeekBar = (VerticalSeekBar) findViewById(R.id.vertical_Seekbar);
+        mSeekBar = findViewById(R.id.vertical_Seekbar);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override

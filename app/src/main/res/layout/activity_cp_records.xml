@@ -11,6 +11,9 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:scrollbarSize="4dp"
+        android:scrollbarThumbVertical="@color/colorBlue"
+        android:scrollbars="vertical"
         />
 
     <ImageView
@@ -25,6 +28,9 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:scrollbarSize="4dp"
+        android:scrollbarThumbVertical="@color/colorBlue"
+        android:scrollbars="vertical"
         />
 
 </android.widget.LinearLayout>

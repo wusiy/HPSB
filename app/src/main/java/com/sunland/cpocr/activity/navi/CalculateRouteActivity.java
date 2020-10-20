@@ -165,7 +165,6 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
             default:
                 break;
         }
-
     }
 
     /**
