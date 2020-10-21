@@ -6,7 +6,7 @@
     <RelativeLayout
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="48dp" 
+        android:layout_height="48dp"
         android:background="@drawable/title_background">
 
         <LinearLayout
@@ -65,10 +65,13 @@
                 android:textSize="18dp" />
         </LinearLayout>
     </RelativeLayout>
-    <ListView 
-        android:id="@+id/recordlist"
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_tracklist"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="5dp"/>
-
+        android:scrollbarSize="5dp"
+        android:scrollbarThumbVertical="@color/colorBlue"
+        android:scrollbars="vertical"
+        />
 </LinearLayout>

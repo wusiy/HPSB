@@ -45,7 +45,7 @@ public class CpzpAdapter extends RecyclerView.Adapter<CpzpAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View root = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_cpzp_item, viewGroup, false);
+        View root = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.adapter_cpzp, viewGroup, false);
         ViewHolder vh = new ViewHolder(root);
         return vh;
     }

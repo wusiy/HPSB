@@ -13,6 +13,8 @@ import com.amap.api.location.AMapLocation;
 public class PathRecord {
 	private AMapLocation mStartPoint;
 	private AMapLocation mEndPoint;
+	private String mStrStartPoint;
+	private String mStrEndPoint;
 	private List<AMapLocation> mPathLinePoints = new ArrayList<AMapLocation>();
 	private String mDistance;
 	private String mDuration;
@@ -80,6 +82,22 @@ public class PathRecord {
 		this.mAveragespeed = averagespeed;
 	}
 
+	public String getStrStartPoint() {
+		return mStrStartPoint;
+	}
+
+	public void setStrStartPoint(String strStartPoint) {
+		this.mStrStartPoint = strStartPoint;
+	}
+
+	public String getStrEndPoint() {
+		return mStrEndPoint;
+	}
+
+	public void setStrEndPoint(String strEndPoint) {
+		this.mStrEndPoint = strEndPoint;
+	}
+
 	public String getDate() {
 		return mDate;
 	}
@@ -95,9 +113,9 @@ public class PathRecord {
 	@Override
 	public String toString() {
 		StringBuilder record = new StringBuilder();
-		record.append("recordSize:" + getPathline().size() + ", ");
-		record.append("distance:" + getDistance() + "m, ");
-		record.append("duration:" + getDuration() + "s");
+		record.append("巡逻点记录个数: " + getPathline().size() + "    ");
+		record.append("巡逻距离: " + getDistance() + "m    ");
+		record.append("巡逻时长: " + getDuration() + "s ");
 		return record.toString();
 	}
 }

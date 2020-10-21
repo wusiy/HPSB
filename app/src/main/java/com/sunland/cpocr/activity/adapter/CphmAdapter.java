@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.utils.CpocrUtils;
 
@@ -45,7 +44,7 @@ public class CphmAdapter extends RecyclerView.Adapter<CphmAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View root = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_cphm_item, viewGroup, false);
+        View root = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.adapter_cphm, viewGroup, false);
         ViewHolder vh = new ViewHolder(root);
         return vh;
     }

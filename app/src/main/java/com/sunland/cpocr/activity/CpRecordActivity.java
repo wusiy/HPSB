@@ -67,7 +67,7 @@ public class CpRecordActivity extends AppCompatActivity {
         DbHepler.open();
         cphmAll = DbHepler.queryAllCarNum();
         DbHepler.close();
-
+        DbHepler.open();
         cphmAdapter = new CphmAdapter(cphmAll);
         cphmAdapter.setScrollTargetPositionListener(new CphmAdapter.OnScrollTargetPositionListener() {
             @Override
@@ -150,7 +150,6 @@ public class CpRecordActivity extends AppCompatActivity {
                         if(deleted){
                             //更新车牌列表
                             cphmAll = DbHepler.queryAllCarNum();
-                            DbHepler.close();
                             for (int i = 0; i < cphmAll.size() + 1; i++) {
                                 cphmAdapter.notifyItemRemoved(0);
                                 cphmAdapter.notifyDataSetChanged();
@@ -170,6 +169,7 @@ public class CpRecordActivity extends AppCompatActivity {
                         } else{
                             Toast.makeText(com.sunland.cpocr.activity.CpRecordActivity.this,cphm + " 数据删除出错",Toast.LENGTH_LONG).show();
                         }
+                        DbHepler.close();
                     }
                 });
         builder.show();

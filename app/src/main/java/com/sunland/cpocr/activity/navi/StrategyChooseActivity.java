@@ -34,9 +34,9 @@ public class StrategyChooseActivity extends Activity implements View.OnClickList
         mStrategys.add(new StrategyStateBean(GdNaviUtils.PRIORITY_HIGHSPEED, hightspeed));
         setContentView(R.layout.activity_strategy_choose);
         mStrategyAdapter = new StrategyChooseAdapter(this.getApplicationContext(), mStrategys);
-        mStrategyChooseListView = (ListView) findViewById(R.id.strategy_choose_list);
+        mStrategyChooseListView = findViewById(R.id.strategy_choose_list);
         mStrategyChooseListView.setAdapter(mStrategyAdapter);
-        mBackLayout = (LinearLayout) findViewById(R.id.title_lly_back);
+        mBackLayout = findViewById(R.id.title_lly_back);
         mBackLayout.setOnClickListener(this);
     }
 

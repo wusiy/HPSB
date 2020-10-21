@@ -319,6 +319,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     record = new PathRecord();
                     mStartTime = System.currentTimeMillis();
                     record.setDate(getcueDate(mStartTime));
+                    record.setStrStartPoint(location);
                     aMap.clear(true);
                     mLocMarker = null;
                 } else{
@@ -330,7 +331,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     //string  result = decimalFormat.format(getTotalDistance() / 1000d) + "KM";
                     LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
                     mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, LprMapActivity.this);
-                    saveRecord(record.getPathline(), record.getDate());
+                    saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                 }
                 break;
 
@@ -377,12 +378,12 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         //上一次的巡逻记录
         lastRecord = dbhelper.queryLastRecord();
         dbhelper.close();
-
         if (record != null) {
             record = null;
         }
         record = new PathRecord();
-        record.setDate(getcueDate(mStartTime));
+        record.setDate(lastRecord.getDate());
+        record.setStrStartPoint(lastRecord.getStrStartPoint());
         //绘制上一次巡逻记录起点
         record.addpoint(lastRecord.getStartpoint());
         mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
@@ -556,7 +557,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
-    protected void saveRecord(List<AMapLocation> list, String time) {
+    protected void saveRecord(List<AMapLocation> list, String time, String strStartpoint) {
         if (list != null && list.size() > 0) {
             String duration = getDuration();
             float distance = getDistance(list);
@@ -576,13 +577,13 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 DbHepler = new DbTracks(this);
                 DbHepler.open();
                 DbHepler.updatelastrecord(String.valueOf(distance), duration, average,
-                        pathlineSring, stratpoint, endpoint, time);
+                        pathlineSring, stratpoint, endpoint, strStartpoint, location, time);
                 DbHepler.close();
             } else{
                 DbHepler = new DbTracks(this);
                 DbHepler.open();
                 DbHepler.createrecord(String.valueOf(distance), duration, average,
-                        pathlineSring, stratpoint, endpoint, time);
+                        pathlineSring, stratpoint, endpoint, strStartpoint, location, time);
                 DbHepler.close();
             }
             Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + distance + "m",Toast.LENGTH_SHORT).show();
@@ -974,7 +975,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                                     mOverlayList.add(mTraceoverlay);
                                     LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
                                     mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, LprMapActivity.this);
-                                    saveRecord(record.getPathline(), record.getDate());
+                                    saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                                 } else{
                                     intent.putExtra(IS_TRACING_KEY, "false");
                                 }

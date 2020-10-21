@@ -1,5 +1,6 @@
 package com.sunland.cpocr.activity;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -27,6 +28,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 
@@ -183,55 +185,50 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, new LocationListener() {
             @Override
-            public void onLocationChanged(Location location) {
+            public void onLocationChanged(Location mLocation) {
                 List<Address> result = null;
                 try {
-                    if (location != null) {
+                    if (mLocation != null) {
                         Geocoder gc = new Geocoder(OfflineLprMapActivity.this, Locale.getDefault());
-                        result = gc.getFromLocation(location.getLatitude(),
-                                location.getLongitude(), 1);
+                        result = gc.getFromLocation(mLocation.getLatitude(),
+                                mLocation.getLongitude(), 1);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                if(result != null){
-                    Toast.makeText(OfflineLprMapActivity.this, result.get(0).getCountryName() + result.get(0).getLocality()
-                    + result.get(0).getSubLocality() + result.get(0).getAdminArea() + result.get(0).getSubAdminArea() + result.get(0).getThoroughfare()
-                    + result.get(0).getSubThoroughfare() + result.get(0).getPremises(), Toast.LENGTH_SHORT).show();
+                if (result != null) {
+                    Toast.makeText(OfflineLprMapActivity.this, fromAddressToString(result.get(0)), Toast.LENGTH_SHORT).show();
+                    location = fromAddressToString(result.get(0));
+                } else {
+                    location = null;
                 }
-
-                // 使用GPS提供的定位信息来更新位置
-                if(dialog.isShowing()){
-                    mLocating.setVisibility(View.GONE);
-                    dialog.dismiss();
-                }
-                lat = fromGpsToAmap(location).getLatitude();
-                lgt = fromGpsToAmap(location).getLongitude();
+                lat = fromGpsToAmap(mLocation).getLatitude();
+                lgt = fromGpsToAmap(mLocation).getLongitude();
                 if (isFirstLoc) {
                     dialog.dismiss();
                     mLocating.setVisibility(View.GONE);
                     //设置缩放级别
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
                     //将地图移动到定位点
-                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat,lgt)));
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat, lgt)));
                     isFirstLoc = false;
                 }
-                addCircle(new LatLng(lat, lgt), fromGpsToAmap(location).getAccuracy());//添加定位精度圆
+                addCircle(new LatLng(lat, lgt), fromGpsToAmap(mLocation).getAccuracy());//添加定位精度圆
                 addMarker(new LatLng(lat, lgt));//添加定位图标
                 mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
                 //aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(lat, lgt)));
                 if (istracing) {
                     LatLng mylocation = new LatLng(lat, lgt);
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(mylocation));
-                    record.addpoint(fromGpsToAmap(location));
+                    record.addpoint(fromGpsToAmap(mLocation));
                     mPolyoptions.add(mylocation);
-                    mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(location)));
+                    mTracelocationlist.add(Util.parseTraceLocation(fromGpsToAmap(mLocation)));
                     redrawline();
                     if (mTracelocationlist.size() > tracesize - 1) {
                         trace();
                     }
                 }
-                loc = fromGpsToAmap(location);
+                loc = fromGpsToAmap(mLocation);
             }
 
             @Override
@@ -243,10 +240,14 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                         break;
                     // GPS状态为服务区外时
                     case LocationProvider.OUT_OF_SERVICE:
+                        location = "";
+                        lat = 0;
                         Toast.makeText(OfflineLprMapActivity.this, "GPS状态:服务区外", Toast.LENGTH_SHORT).show();
                         break;
                     // GPS状态为暂停服务时
                     case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                        location = "";
+                        lat = 0;
                         Toast.makeText(OfflineLprMapActivity.this, "GPS状态:服务暂停", Toast.LENGTH_SHORT).show();
                         break;
                 }
@@ -257,6 +258,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
             }
             @Override
             public void onProviderDisabled(String provider) {
+                location = "";
             }
         });
 
@@ -266,11 +268,21 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                 switch (event) {
                     // 第一次定位
                     case GpsStatus.GPS_EVENT_FIRST_FIX:
-                        Toast.makeText(OfflineLprMapActivity.this,"第一次定位成功", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(OfflineLprMapActivity.this, "第一次定位成功", Toast.LENGTH_SHORT).show();
                         break;
                     // 卫星状态改变
                     case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
-                        Toast.makeText(OfflineLprMapActivity.this,"卫星状态改变", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(OfflineLprMapActivity.this, "卫星状态改变", Toast.LENGTH_SHORT).show();
+                        if (ActivityCompat.checkSelfPermission(OfflineLprMapActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    ActivityCompat#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+                            return;
+                        }
                         GpsStatus gpsStatus = locationManager.getGpsStatus(null);
                         // 获取卫星颗数的默认最大值
                         int maxSatellites = gpsStatus.getMaxSatellites();
@@ -299,7 +311,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         ib_locate.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if(loc != null){
+                if(loc != null && lat != 0){
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
                     aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(loc.getLatitude(), loc.getLongitude())));
                 } else{
@@ -427,7 +439,8 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
             record = null;
         }
         record = new PathRecord();
-        record.setDate(getcueDate(mStartTime));
+        record.setDate(lastRecord.getDate());
+        record.setStrStartPoint(lastRecord.getStrStartPoint());
         //绘制上一次巡逻记录起点
         record.addpoint(lastRecord.getStartpoint());
         mPolyoptions.add(new LatLng(lastRecord.getStartpoint().getLatitude(),
@@ -488,6 +501,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     record = new PathRecord();
                     mStartTime = System.currentTimeMillis();
                     record.setDate(getcueDate(mStartTime));
+                    record.setStrStartPoint(location);
                     aMap.clear(true);
                     mLocMarker = null;
                 } else{
@@ -499,7 +513,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     //string  result = decimalFormat.format(getTotalDistance() / 1000d) + "KM";
                     LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
                     mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
-                    saveRecord(record.getPathline(), record.getDate());
+                    saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                 }
                 break;
 
@@ -533,6 +547,55 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private String fromAddressToString (Address address){
+        StringBuffer addressString = new StringBuffer();
+        addressString.append(address.getCountryName());
+        addressString.append(address.getAdminArea()); //浙江
+        //addressString.append(address.getSubAdminArea()); // null
+        addressString.append(address.getLocality()); //宁波
+        addressString.append(address.getSubLocality()); //区
+        addressString.append("CC");
+        if(address.getMaxAddressLineIndex() != -1){
+            for(int i = 0; i < address.getMaxAddressLineIndex(); i++){
+                addressString.append(address.getAddressLine(i));
+                addressString.append("TT");
+            }
+        }
+        addressString.append(address.getThoroughfare());  // null
+        addressString.append(address.getPremises()); //null
+//        if(!address.getCountryName().equals("null")){
+//            addressString.append(address.getCountryName());
+//        }
+//        if(!address.getAdminArea().equals("null")){
+//            addressString.append(address.getAdminArea());
+//        }
+//        if(!address.getSubAdminArea().equals("null")){
+//            addressString.append(address.getSubAdminArea());
+//        }
+//        if(!address.getLocality().equals("null")){
+//            addressString.append(address.getLocality());
+//        }
+//        if(!address.getSubLocality().equals("null")){
+//            addressString.append(address.getSubLocality());
+//        }
+//        if(address.getMaxAddressLineIndex() != -1){
+//            for(int i = 0; i < address.getMaxAddressLineIndex(); i++){
+//                addressString.append(address.getAddressLine(i));
+//            }
+//        }
+//        if(!address.getThoroughfare().equals("null")){
+//            addressString.append(address.getThoroughfare());
+//        }
+//        if(!address.getSubThoroughfare().equals("null")){
+//            addressString.append(address.getSubThoroughfare());
+//        }
+//        if(!address.getPremises().equals("null")){
+//            addressString.append(address.getPremises());
+//        }
+        return addressString.toString();
+    }
+
 
     //GPS坐标转换高德坐标
     private AMapLocation fromGpsToAmap(Location location) {
@@ -616,7 +679,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
         mLocMarker.setTitle(LOCATION_MARKER_FLAG);
     }
 
-    protected void saveRecord(List<AMapLocation> list, String time) {
+    protected void saveRecord(List<AMapLocation> list, String time, String strStartpoint) {
         if (list != null && list.size() > 0) {
             String duration = getDuration();
             float distance = getDistance(list);
@@ -636,13 +699,13 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                 DbHepler = new DbTracks(this);
                 DbHepler.open();
                 DbHepler.updatelastrecord(String.valueOf(distance), duration, average,
-                        pathlineSring, stratpoint, endpoint, time);
+                        pathlineSring, stratpoint, endpoint, strStartpoint, location, time);
                 DbHepler.close();
             } else{
                 DbHepler = new DbTracks(this);
                 DbHepler.open();
                 DbHepler.createrecord(String.valueOf(distance), duration, average,
-                        pathlineSring, stratpoint, endpoint, time);
+                        pathlineSring, stratpoint, endpoint, strStartpoint, location, time);
                 DbHepler.close();
             }
             Toast.makeText(getApplicationContext(),"轨迹录制已结束,此次总距离" + distance + "m",Toast.LENGTH_SHORT).show();
@@ -1024,7 +1087,7 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                             mOverlayList.add(mTraceoverlay);
                             LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
                             mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
-                            saveRecord(record.getPathline(), record.getDate());
+                            saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                         } else{
                             intent.putExtra(IS_TRACING_KEY, "false");
                         }

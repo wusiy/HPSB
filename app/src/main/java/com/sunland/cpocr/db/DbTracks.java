@@ -30,6 +30,8 @@ public class DbTracks {
 	public static final String KEY_LINE = "pathline";
 	public static final String KEY_STRAT = "stratpoint";
 	public static final String KEY_END = "endpoint";
+	public static final String KEY_STR_STARTPOINT ="str_startpoint";
+	public static final String KEY_STR_ENDPOINT = "str_endpoint";
 	public static final String KEY_DATE = "date";
 	private final static String DATABASE_PATH = android.os.Environment
 			.getExternalStorageDirectory().getAbsolutePath() + "/HPSB/recordPath";
@@ -41,6 +43,8 @@ public class DbTracks {
 			+ " integer primary key autoincrement,"
 			+ "stratpoint STRING,"
 			+ "endpoint STRING,"
+			+ "str_startpoint STRING,"
+			+ "str_endpoint STRING,"
 			+ "pathline STRING,"
 			+ "distance STRING,"
 			+ "duration STRING,"
@@ -104,31 +108,19 @@ public class DbTracks {
 	 * @return
 	 */
 	public long createrecord(String distance, String duration,
-			String averagespeed, String pathline, String stratpoint,
-			String endpoint, String date) {
+			String averagespeed, String pathline, String stratpoint, String endpoint,
+							 String str_startpoint, String str_endpoint, String date) {
 		ContentValues args = new ContentValues();
-		args.put("distance", distance);
-		args.put("duration", duration);
-		args.put("averagespeed", averagespeed);
-		args.put("pathline", pathline);
-		args.put("stratpoint", stratpoint);
-		args.put("endpoint", endpoint);
-		args.put("date", date);
+		args.put(KEY_DISTANCE, distance);
+		args.put(KEY_DURATION, duration);
+		args.put(KEY_SPEED, averagespeed);
+		args.put(KEY_LINE, pathline);
+		args.put(KEY_STRAT, stratpoint);
+		args.put(KEY_END, endpoint);
+		args.put(KEY_STR_STARTPOINT, str_startpoint);
+		args.put(KEY_STR_ENDPOINT, str_endpoint);
+		args.put(KEY_DATE, date);
 		return db.insert(RECORD_TABLE, null, args);
-	}
-
-	/**
-	 * 删除最后一条数据
-	 * @return
-	 */
-	public boolean deleteLastTrack( ) {
-		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
-				null, null, null, null);
-		int mRecordItemId = allRecordCursor.getCount() ;
-		long b = (int)mRecordItemId;
-		return db.delete(RECORD_TABLE, "id=?", new String[] { String.valueOf(mRecordItemId)}) > 0;
-		//return db.delete(RECORD_TABLE, "id=" + b, null) > 0;
-
 	}
 
 	/**
@@ -158,6 +150,10 @@ public class DbTracks {
 			record.setEndpoint(Util.parseLocation(allRecordCursor
 					.getString(allRecordCursor
 							.getColumnIndex(DbTracks.KEY_END))));
+			record.setStrStartPoint(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_STR_STARTPOINT)));
+			record.setStrEndPoint(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_STR_ENDPOINT)));
 			allRecord.add(record);
 		}
 		Collections.reverse(allRecord);
@@ -171,7 +167,7 @@ public class DbTracks {
 	 */
 	public PathRecord queryRecordByTime(String date){
 		String where = KEY_DATE + "=?";
-		String[] selectionArgs = new String[] { String.valueOf(date) };
+		String[] selectionArgs = new String[] {date};
 		Cursor cursor = db.query(RECORD_TABLE, getColumns(), where,
 				selectionArgs, null, null, null);
 		PathRecord record = new PathRecord();
@@ -191,6 +187,10 @@ public class DbTracks {
 					.getColumnIndex(DbTracks.KEY_STRAT))));
 			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
 					.getColumnIndex(DbTracks.KEY_END))));
+			record.setStrStartPoint(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STR_STARTPOINT)));
+			record.setStrEndPoint(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STR_ENDPOINT)));
 		}
 		return record;
 	}
@@ -222,6 +222,10 @@ public class DbTracks {
 					.getColumnIndex(DbTracks.KEY_STRAT))));
 			record.setEndpoint(Util.parseLocation(cursor.getString(cursor
 					.getColumnIndex(DbTracks.KEY_END))));
+			record.setStrStartPoint(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STR_STARTPOINT)));
+			record.setStrEndPoint(cursor.getString(cursor
+					.getColumnIndex(DbTracks.KEY_STR_ENDPOINT)));
 		}
 		return record;
 	}
@@ -252,6 +256,10 @@ public class DbTracks {
 			record.setEndpoint(Util.parseLocation(allRecordCursor
 					.getString(allRecordCursor
 							.getColumnIndex(DbTracks.KEY_END))));
+			record.setStrStartPoint(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_STR_STARTPOINT)));
+			record.setStrEndPoint(allRecordCursor.getString(allRecordCursor
+					.getColumnIndex(DbTracks.KEY_STR_ENDPOINT)));
 		}
 		return record;
 	}
@@ -269,27 +277,39 @@ public class DbTracks {
 	 * @return
 	 */
 	public long updatelastrecord(String distance, String duration,
-							 String averagespeed, String pathline, String stratpoint,
-							 String endpoint, String date) {
+							 String averagespeed, String pathline, String stratpoint, String endpoint,
+								 String str_startpoint, String str_endpoint, String date) {
 
 		Cursor allRecordCursor = db.query(RECORD_TABLE, getColumns(), null,
 				null, null, null, null);
 		int mRecordItemId = allRecordCursor.getCount();
 		Log.e("AAA",mRecordItemId + "z");
 		ContentValues args = new ContentValues();
-		args.put("distance", distance);
-		args.put("duration", duration);
-		args.put("averagespeed", averagespeed);
-		args.put("pathline", pathline);
-		args.put("stratpoint", stratpoint);
-		args.put("endpoint", endpoint);
-		args.put("date", date);
- 		long b = (int)mRecordItemId;
+		args.put(KEY_DISTANCE, distance);
+		args.put(KEY_DURATION, duration);
+		args.put(KEY_SPEED, averagespeed);
+		args.put(KEY_LINE, pathline);
+		args.put(KEY_STRAT, stratpoint);
+		args.put(KEY_END, endpoint);
+		args.put(KEY_STR_STARTPOINT, str_startpoint);
+		args.put(KEY_STR_ENDPOINT, str_endpoint);
+		args.put(KEY_DATE, date);
+ 		long b = queryLastRecord().getId();
 		return db.update(RECORD_TABLE, args,"id=" + b, null) ;
+	}
+
+	/**
+	 * 删除一条轨迹记录
+	 * @param date
+	 * @return
+	 */
+	public boolean deleteOneTrack(String date ) {
+		String where = KEY_DATE + "=?";
+		return db.delete(RECORD_TABLE, where, new String[] { date}) > 0;
 	}
 
 	private String[] getColumns() {
 		return new String[] { KEY_ROWID, KEY_DISTANCE, KEY_DURATION, KEY_SPEED,
-				KEY_LINE, KEY_STRAT, KEY_END, KEY_DATE };
+				KEY_LINE, KEY_STRAT, KEY_END, KEY_STR_STARTPOINT, KEY_STR_ENDPOINT, KEY_DATE };
 	}
 }

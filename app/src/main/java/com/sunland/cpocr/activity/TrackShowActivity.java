@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
  * 轨迹回放、纠偏后轨迹回放
  * 
  */
-public class RecordShowActivity extends Activity implements
+public class TrackShowActivity extends Activity implements
 		OnMapLoadedListener, TraceListener, OnClickListener {
 	private final static int AMAP_LOADED = 2;
 
@@ -57,7 +57,7 @@ public class RecordShowActivity extends Activity implements
 	private Marker mGraspStartMarker, mGraspEndMarker, mGraspRoleMarker;
 	private Polyline mOriginPolyline, mGraspPolyline;
 
-	private int mRecordItemId;
+	private String mRecordItemTime;
 	private List<LatLng> mOriginLatLngList;
 	private List<LatLng> mGraspLatLngList;
 	private boolean mGraspChecked = false;
@@ -81,8 +81,7 @@ public class RecordShowActivity extends Activity implements
 		int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2 + 3;
 		mThreadPool = Executors.newFixedThreadPool(threadPoolSize);
 		if (recordIntent != null) {
-			mRecordItemId = recordIntent.getIntExtra(TrackRecordActivity.RECORD_ID,
-					-1);
+			mRecordItemTime = recordIntent.getStringExtra(TrackRecordActivity.RECORD_DATE);
 		}
 		initMap();
 	}
@@ -207,7 +206,7 @@ public class RecordShowActivity extends Activity implements
 				getApplicationContext());
 		DbTracks dbhelper = new DbTracks(this.getApplicationContext());
 		dbhelper.open();
-		PathRecord mRecord = dbhelper.queryRecordById(mRecordItemId);
+		PathRecord mRecord = dbhelper.queryRecordByTime(mRecordItemTime);
 		dbhelper.close();
 		if (mRecord != null) {
 			List<AMapLocation> recordList = mRecord.getPathline();

@@ -40,6 +40,7 @@ import com.amap.api.navi.view.RouteOverLay;
 import com.autonavi.tbt.TrafficFacilityInfo;
 import com.sunland.cpocr.R;
 import com.sunland.cpocr.activity.LprMapActivity;
+import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import com.sunland.cpocr.bean.StrategyBean;
 import com.sunland.cpocr.utils.GdNaviUtils;
 import java.util.ArrayList;
@@ -870,7 +871,7 @@ public class CalculateRouteActivity extends Activity implements AMapNaviListener
     //安卓重写返回键事件
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode==KeyEvent.KEYCODE_BACK){
-            Intent intent= new Intent(CalculateRouteActivity.this, LprMapActivity.class);
+            Intent intent= new Intent(CalculateRouteActivity.this, OfflineLprMapActivity.class);
             intent.putExtra(NAVI_TYPE_KEY, "cancle_navi");
             intent.putExtra(IS_TRACING_KEY, istracing);
             startActivity(intent);
