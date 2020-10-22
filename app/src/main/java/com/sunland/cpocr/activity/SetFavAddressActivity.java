@@ -3,6 +3,8 @@ package com.sunland.cpocr.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.RelativeLayout;
+
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.amap.api.services.core.PoiItem;
 import com.amap.poisearch.searchmodule.ISearchModule;
@@ -22,13 +24,17 @@ public class SetFavAddressActivity extends AppCompatActivity {
 
     private SearchModuleDelegate mSearchModuelDeletage;
     private int mFavType = 0;
+    private ActionBar actionBar;
     public static final String CURR_CITY_KEY = "curr_city_key";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setfavaddress);
-
+        actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
         mFavType = getIntent().getIntExtra(FAVTYPE_KEY, -1);
         RelativeLayout contentView = (RelativeLayout)findViewById(R.id.content_view);
         mSearchModuelDeletage = new SearchModuleDelegate();

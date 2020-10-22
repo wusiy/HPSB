@@ -451,7 +451,6 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                 //aMapLocation.setLongitude(aMapLocation.getLongitude() + Math.random()/1000);
                 if (isFirstLoc) {
                     dialog.dismiss();
-                    mLocating.setVisibility(View.GONE);
                     //设置缩放级别
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(15));
                     //将地图移动到定位点
@@ -459,6 +458,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     isFirstLoc = false;
                     mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                 }
+                mLocating.setVisibility(View.GONE);
                 //addCircle(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()), aMapLocation.getAccuracy());//添加定位精度圆
                 //addMarker(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude()));//添加定位图标
                 //mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
@@ -482,6 +482,7 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
                     }
                 }
             } else {
+                mLocating.setVisibility(View.VISIBLE);
                 //显示错误信息ErrCode是错误码，errInfo是错误信息，详见错误码表。
                 Log.e("AmapError", "location Error, ErrCode:"
                         + aMapLocation.getErrorCode() + ", errInfo:"
@@ -1040,7 +1041,11 @@ public class LprMapActivity extends BaseOcrActivity implements LocationSource, A
             } else if(mAMapNaviView.getVisibility() == View.VISIBLE){
                 onNaviCancel();
             } else if(mapView.getVisibility() == View.VISIBLE) {
-
+                if(istracing){
+                    Toast.makeText(this, "当前正在记录巡逻轨迹，请先结束记录轨迹", Toast.LENGTH_SHORT).show();
+                } else{
+                    finish();
+                }
             } else{
                 super.onKeyDown(keyCode, event);
             }

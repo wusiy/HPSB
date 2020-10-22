@@ -362,7 +362,7 @@ public class TrackShowActivity extends Activity implements
 
 	@Override
 	public void onRequestFailed(int arg0, String arg1) {
-		Toast.makeText(this.getApplicationContext(), "轨迹纠偏失败:" + arg1,
+		Toast.makeText(this.getApplicationContext(), "轨迹纠偏失败: 巡逻点个数过少或无网络连接",
 				Toast.LENGTH_SHORT).show();
 
 	}

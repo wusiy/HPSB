@@ -174,13 +174,14 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
                 mCamera.setParameters(mCameraParameters);
             }
         });
-        mBackBtn = (ImageButton) findViewById(R.id.orc_back_btn);
+        mBackBtn = findViewById(R.id.orc_back_btn);
         mBackBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 finish();
             }
         });
+        mBackBtn.setVisibility(View.INVISIBLE);
         mSeekBar = findViewById(R.id.vertical_Seekbar);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
