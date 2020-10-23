@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 import com.sunland.cpocr.R;
 
 /**
- * Created by liangchao_suxun on 2017/4/28.
+ * 城市选择
  */
 
 public class CityChooseActivity extends AppCompatActivity {

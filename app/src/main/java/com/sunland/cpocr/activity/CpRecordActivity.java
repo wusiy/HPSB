@@ -67,7 +67,6 @@ public class CpRecordActivity extends AppCompatActivity {
         DbHepler.open();
         cphmAll = DbHepler.queryAllCarNum();
         DbHepler.close();
-        DbHepler.open();
         cphmAdapter = new CphmAdapter(cphmAll);
         cphmAdapter.setScrollTargetPositionListener(new CphmAdapter.OnScrollTargetPositionListener() {
             @Override

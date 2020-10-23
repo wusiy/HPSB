@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 数据库相关操作，用于存取轨迹记录
+ * 车牌号码照片数据库
  *
  */
 public class DbCpHmZp {

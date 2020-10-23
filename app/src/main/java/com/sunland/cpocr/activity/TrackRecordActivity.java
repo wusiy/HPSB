@@ -53,7 +53,6 @@ public class TrackRecordActivity extends AppCompatActivity {
         DbHepler.open();
         trackAll = DbHepler.queryRecordAll();
         DbHepler.close();
-        DbHepler.open();
         trackAdapter = new TrackAdapter(trackAll);
         trackAdapter.setScrollTargetPositionListener(new TrackAdapter.OnScrollTargetPositionListener() {
             @Override

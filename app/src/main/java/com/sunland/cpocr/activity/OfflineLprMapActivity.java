@@ -106,6 +106,10 @@ import static com.sunland.cpocr.MainActivity.IS_TRACING_KEY;
 import static com.sunland.cpocr.MainActivity.NAVI_TYPE_KEY;
 import static com.sunland.cpocr.MainActivity.POIITEM_STR_KEY;
 
+/**
+ * 离线定位，车牌识别
+ */
+
 public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListener, AMapNaviListener, AMapNaviViewListener {
 
     private int tracesize = 30;
@@ -485,7 +489,8 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                     //DecimalFormat decimalFormat = new DecimalFormat("0.0");
                     //string  result = decimalFormat.format(getTotalDistance() / 1000d) + "KM";
                     LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-                    mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
+                    mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) ,
+                            LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
                     saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                 }
                 break;
@@ -523,33 +528,15 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
 
     private String fromAddressToString (Address address){
         StringBuffer addressString = new StringBuffer();
-        addressString.append(address.getAdminArea()); //浙江
-        addressString.append(address.getSubAdminArea()); // null
-        addressString.append(address.getLocality()); //宁波
-        addressString.append(address.getSubLocality()); //区
-        if(address.getMaxAddressLineIndex() != -1){
-            addressString.append(address.getAddressLine(0));
-        }
-        addressString.append(address.getThoroughfare());  // null 道路
-        addressString.append(address.getFeatureName()); //null 周边地址
-//        if(!address.getCountryName().equals("null")){
-//            addressString.append(address.getCountryName());
-//        }
-//        if(!address.getAdminArea().equals("null")){
-//            addressString.append(address.getAdminArea());
-//        }
-//        if(!address.getSubAdminArea().equals("null")){
-//            addressString.append(address.getSubAdminArea());
-//        }
-//        if(!address.getLocality().equals("null")){
-//            addressString.append(address.getLocality());
-//        }
-//        if(!address.getSubLocality().equals("null")){
-//            addressString.append(address.getSubLocality());
-//        }
+//        addressString.append(address.getAdminArea()); //浙江
+//        //addressString.append(address.getSubAdminArea()); // null
+//        addressString.append(address.getLocality()); //宁波
+//        addressString.append(address.getSubLocality()); //区
 //        if(address.getMaxAddressLineIndex() != -1){
-//                addressString.append(address.getAddressLine(0));
+//            addressString.append(address.getAddressLine(0));
 //        }
+//        addressString.append(address.getThoroughfare());  // 道路
+        addressString.append(address.getFeatureName());
         return addressString.toString();
     }
 
@@ -1043,7 +1030,8 @@ public class OfflineLprMapActivity extends BaseOcrActivity implements TraceListe
                             mEndTime = System.currentTimeMillis();
                             mOverlayList.add(mTraceoverlay);
                             LBSTraceClient mTraceClient = new LBSTraceClient(getApplicationContext());
-                            mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) , LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
+                            mTraceClient.queryProcessedTrace(2, Util.parseTraceLocationList(record.getPathline()) ,
+                                    LBSTraceClient.TYPE_AMAP, OfflineLprMapActivity.this);
                             saveRecord(record.getPathline(), record.getDate(), record.getStrStartPoint());
                         } else{
                             intent.putExtra(IS_TRACING_KEY, "false");

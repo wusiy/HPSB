@@ -17,7 +17,7 @@ import static com.sunland.cpocr.MainActivity.FAVTYPE_KEY;
 import static com.sunland.cpocr.MainActivity.POIITEM_STR_KEY;
 
 /**
- * Created by liangchao_suxun on 2017/4/28.
+ * 设置常用地点
  */
 
 public class SetFavAddressActivity extends AppCompatActivity {

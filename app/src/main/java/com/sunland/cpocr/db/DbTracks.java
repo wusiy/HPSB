@@ -19,7 +19,7 @@ import java.util.List;
 
 
 /**
- * 数据库相关操作，用于存取轨迹记录
+ * 轨迹记录数据库
  * 
  */
 public class DbTracks {
@@ -162,7 +162,7 @@ public class DbTracks {
 
 	/**
 	 * 按照时间查询
-	 * @param mRecordItemId
+	 * @param date
 	 * @return
 	 */
 	public PathRecord queryRecordByTime(String date){

@@ -130,7 +130,7 @@ public class StrategyChooseAdapter extends BaseAdapter implements View.OnClickLi
         notifyDataSetChanged();
     }
 
-    public class Holder {
+    public static class Holder {
         public TextView mStrategyNameText;
         public ImageView mStrategyChooseFlagImage;
         public StrategyStateBean mStrategyBean;
