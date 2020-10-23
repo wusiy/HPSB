@@ -14,7 +14,6 @@ android {
             keyPassword 'sunland'
             storeFile rootProject.file('../Hpsb/debug.jks')
             storePassword 'sunland'
-
         }
         release {
             keyAlias 'key1'
@@ -27,8 +26,8 @@ android {
         applicationId "com.sunland.cpocr"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 1
-        versionName "1"
+        versionCode 2010230954
+        versionName "1.0.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
@@ -47,6 +46,23 @@ android {
             manifestPlaceholders = [IS_DEMO_VALUE: "debug", CATEGORY_VALUE: "LAUNCHER"]
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+    }
+
+
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'debug') {
+            variant.outputs.all {
+                if (outputFileName != null && outputFileName.endsWith('.apk')) {
+                    outputFileName = "${variant.flavorName}Hpsb_KD${variant.versionName}-debug.apk"
+                }
+            }
+        } else if (variant.buildType.name == 'release') {
+            variant.outputs.all {
+                if (outputFileName != null && outputFileName.endsWith('.apk')) {
+                    outputFileName = "${variant.flavorName}Hpsb_KD${variant.versionName}-release.apk"
+                }
+            }
         }
     }
 
