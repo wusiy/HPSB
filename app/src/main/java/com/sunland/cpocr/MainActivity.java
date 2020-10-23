@@ -18,6 +18,10 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
+/**
+ * 科达
+ */
+
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
     public static final String FAVTYPE_KEY = "favtype";
     public static final String POIITEM_STR_KEY = "poiitem_str";
