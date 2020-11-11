@@ -28,4 +28,6 @@
     <color name="phone_bg">#f6f6f6</color>
     <color name="grey"> #ebebeb</color>
     <color name="white">#ffffff</color>
+
+    <color name="colorWhite">#FFFFFF</color>
 </resources>

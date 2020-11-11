@@ -11,6 +11,7 @@ import android.os.Bundle;
 
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.activity.OfflineLprMapActivity;
+import com.sunland.cpocr.activity.UsbCameraActivity;
 
 import java.io.File;
 import java.util.List;
@@ -19,7 +20,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 /**
- * 科达
+ * 号牌识别
  */
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             destDir.mkdirs();
         }
 
-        final String items[] = {"在线模式", "离线模式"};
+        final String items[] = {"在线模式", "离线模式", "UsbCamera"};
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("选择模式")
                 .setItems(items, new DialogInterface.OnClickListener() {
@@ -64,6 +65,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             Intent intent;
                             intent = new Intent(MainActivity.this, OfflineLprMapActivity.class);
                             intent.putExtra(NAVI_TYPE_KEY, "");
+                            startActivity(intent);
+                            finish();
+                        } else if(which == 2){
+                            Intent intent;
+                            intent = new Intent(MainActivity.this, UsbCameraActivity.class);
                             startActivity(intent);
                             finish();
                         }

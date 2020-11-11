@@ -54,13 +54,13 @@ android {
         if (variant.buildType.name == 'debug') {
             variant.outputs.all {
                 if (outputFileName != null && outputFileName.endsWith('.apk')) {
-                    outputFileName = "${variant.flavorName}Hpsb_KD${variant.versionName}-debug.apk"
+                    outputFileName = "${variant.flavorName}Hpsb${variant.versionName}-debug.apk"
                 }
             }
         } else if (variant.buildType.name == 'release') {
             variant.outputs.all {
                 if (outputFileName != null && outputFileName.endsWith('.apk')) {
-                    outputFileName = "${variant.flavorName}Hpsb_KD${variant.versionName}-release.apk"
+                    outputFileName = "${variant.flavorName}Hpsb${variant.versionName}-release.apk"
                 }
             }
         }
@@ -89,5 +89,6 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'pub.devrel:easypermissions:3.0.0'
 
+    implementation 'com.github.jiangdongguo:AndroidUSBCamera:2.3.4'
 
 }

@@ -123,6 +123,12 @@
             android:screenOrientation="reverseLandscape" >
         </activity>
 
+        <activity
+            android:name=".activity.UsbCameraActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="reverseLandscape" >
+        </activity>
+
 
     </application>
 
