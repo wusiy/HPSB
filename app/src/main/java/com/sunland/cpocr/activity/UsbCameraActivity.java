@@ -117,6 +117,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
     private String pathPic;
     private int EVENT_CP = 1;
     private String carInfo;
+    public int l1, r1, t1, b1;
 
     private UVCCameraHelper.OnMyDevConnectListener listener = new UVCCameraHelper.OnMyDevConnectListener() {
         @Override
@@ -219,7 +220,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                 byte [] data = nv21Yuv;
                 long currentTime = System.currentTimeMillis();
                 boolean canCapture = true;
-                if (currentTime - mLastCaptureTime <= 800) {//识别延迟  单位 ms
+                if (currentTime - mLastCaptureTime <= 100) {//识别延迟  单位 ms
                     canCapture = false;
                 }
                 if (!pauseOcr() && bInitKernal && canCapture) {
@@ -258,7 +259,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                                 hpysStr = "";
                             }
 
-                            mVibrator.vibrate(300);
+                            mVibrator.vibrate(200);
                             Matrix matrix = new Matrix();
                             matrix.postRotate(180);
                             bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
@@ -397,6 +398,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                     mCameraHelper.updateResolution(widht, height);
                     preWidth = widht;
                     preHeight = height;
+                    api.init(UsbCameraActivity.this, 0, 0, preWidth, preHeight, preWidth, preHeight);
                 }
                 mDialog.dismiss();
             }
@@ -447,8 +449,8 @@ public class UsbCameraActivity extends AppCompatActivity implements
         }
 
         try {
-            preWidth = 1280;
-            preHeight = 720;
+            preWidth = mCameraHelper.getPreviewWidth();
+            preHeight = mCameraHelper.getPreviewHeight();
             Log.d("QQQQQQQQQQQQ", preWidth + "  " + preHeight);
 
             if (!bROI) {
@@ -475,6 +477,8 @@ public class UsbCameraActivity extends AppCompatActivity implements
                         l = (width - ntmpW) / 2;
                         r = width - l;
                     }
+
+
                 }
 
                 double proportion = 0, hproportion = 0;
@@ -490,10 +494,20 @@ public class UsbCameraActivity extends AppCompatActivity implements
                 roiT = (int) (t / hproportion);
                 roiR = (int) (r / proportion);
                 roiB = (int) (b / hproportion);
-                m_ROI[0] = roiL;
-                m_ROI[1] = roiT;
-                m_ROI[2] = roiR;
-                m_ROI[3] = roiB;
+//                m_ROI[0] = roiL;
+//                m_ROI[1] = roiT;
+//                m_ROI[2] = roiR;
+//                m_ROI[3] = roiB;
+
+//                m_ROI[0] = 30;
+//                m_ROI[1] = 300;
+//                m_ROI[2] = 495;
+//                m_ROI[3] = 700;
+
+                m_ROI[0] = 0;
+                m_ROI[1] = 0;
+                m_ROI[2] = 640;
+                m_ROI[3] = 480;
                 Log.d(TAG, "left = " + roiL + ",top = " + roiT + ",right = " + roiR + "，button = " + roiB);
 
                 bROI = true;
@@ -616,7 +630,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
 
         if (myView == null) {
             myView = new LPRfinderView(UsbCameraActivity.this, width, height, bSerialMode);
-            re_c.addView(myView);
+            //re_c.addView(myView);
         }
 
         mTextureView = findViewById(R.id.camera_view);
@@ -641,12 +655,12 @@ public class UsbCameraActivity extends AppCompatActivity implements
 
             }
         });
-        mSeekContrast.setMax(50);
+        mSeekContrast.setMax(128);
         mSeekContrast.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
-                    mCameraHelper.setModelValue(UVCCameraHelper.MODE_CONTRAST,progress);
+                    mCameraHelper.setModelValue(UVCCameraHelper.MODE_BRIGHTNESS,128-64);
                 }
             }
 
@@ -682,14 +696,19 @@ public class UsbCameraActivity extends AppCompatActivity implements
         api = LPR.getInstance();
         //如果是索信8核机器
         if ("P990-XD(7.0)".equalsIgnoreCase(Build.MODEL)) {
-            nRet = api.init(this, preWidth - m_ROI[2], m_ROI[1], preWidth - m_ROI[0], m_ROI[3], preWidth, preHeight);
+            //nRet = api.init(this, preWidth - m_ROI[2], m_ROI[1], preWidth - m_ROI[0], m_ROI[3], preWidth, preHeight);
+            nRet = api.init(this, 0, 0, preWidth, preHeight, preWidth, preHeight);
+
             rotateFlag = 3;
         } else if("P999-XD".equalsIgnoreCase(Build.MODEL)) {
-            nRet = api.init(this, preWidth - m_ROI[2], preHeight - m_ROI[3],  preWidth - m_ROI[0], preHeight - m_ROI[1], preWidth, preHeight);
+            //nRet = api.init(this, preWidth - m_ROI[2], preHeight - m_ROI[3],  preWidth - m_ROI[0], preHeight - m_ROI[1], preWidth, preHeight);
+            nRet = api.init(this, 0, 0, preWidth, preHeight, preWidth, preHeight);
+
             rotateFlag = 3;
         } else
         {
-            nRet = api.init(this, preHeight - m_ROI[2], m_ROI[1], preHeight - m_ROI[0], m_ROI[3], preWidth, preHeight);
+            //nRet = api.init(this, preHeight - m_ROI[2], m_ROI[1], preHeight - m_ROI[0], m_ROI[3], preWidth, preHeight);
+            nRet = api.init(this, 0, 0, preWidth, preHeight, preWidth, preHeight);
             rotateFlag = 3;
         }
         return nRet;

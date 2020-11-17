@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.View;
 
 import com.sunland.cpocr.R;
@@ -141,6 +142,8 @@ public final class LPRfinderView extends View {
         canvas.drawLine(l + num + ShrinkSize + 70, t, r - num - ShrinkSize + 100, t, paintLine);
 
         canvas.drawLine(l + num + ShrinkSize + 70, b, r - num - ShrinkSize + 100, b, paintLine);
+
+        Log.d("AAAAAAAAAAAAA", "left " + l + "  right " + r + " top " + t +  " bottom  " + b );
 
 
 //	     mText = "请将车牌置于框内";
