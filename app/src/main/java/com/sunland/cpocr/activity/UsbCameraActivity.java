@@ -1,21 +1,15 @@
 package com.sunland.cpocr.activity;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Outline;
-import android.graphics.PixelFormat;
+
 import android.graphics.Rect;
 import android.graphics.YuvImage;
-import android.hardware.Camera;
 import android.hardware.usb.UsbDevice;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +21,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -35,24 +31,24 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewOutlineProvider;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.Toast;
 
-import com.jiangdg.usbcamera.UVCCameraHelper;
-import com.jiangdg.usbcamera.utils.FileUtils;
+import com.serenegiant.usb.UVCCamera;
+import com.sunland.usbcamera.UVCCameraHelper;
+import com.sunland.usbcamera.utils.FileUtils;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
@@ -65,7 +61,6 @@ import com.sunland.cpocr.db.DbCpHmZp;
 import com.sunland.cpocr.event.BusFactory;
 import com.sunland.cpocr.event.EventCenter;
 import com.sunland.cpocr.utils.CpocrUtils;
-import com.sunland.cpocr.utils.VerticalSeekBar;
 import com.sunland.cpocr.view.LPRfinderView;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -105,6 +100,28 @@ public class UsbCameraActivity extends AppCompatActivity implements
     private long mLastCaptureTime = 0;
     protected ActionBar actionBar;
     private DbCpHmZp DbHepler;
+
+    private EditText etSetBrightness;
+    private Button btResetBrightness;
+    private EditText etSetContrast;
+    private Button btResetContrast;
+    private CheckBox cbAutoContrast;
+    private EditText etSetZoom;
+    private Button btResetZoom;
+    private EditText etSetFocus;
+    private Button btResetFocus;
+    private CheckBox cbAutoFocus;
+    private EditText etSetHue;
+    private Button btResetHue;
+    private CheckBox cbAutoHue;
+    private EditText etSetSaturation;
+    private Button btResetSaturation;
+    private EditText etSetSharpness;
+    private Button btResetSharpness;
+    private EditText etSetGamma;
+    private Button btResetGamma;
+    private EditText etSetGain;
+    private Button btResetGain;
 
     private View mTextureView;
     private UVCCameraHelper mCameraHelper;
@@ -149,20 +166,17 @@ public class UsbCameraActivity extends AppCompatActivity implements
             } else {
                 isPreview = true;
                 showShortMsg("connecting");
-                // initialize seekbar
                 // need to wait UVCCamera initialize over
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             Thread.sleep(2500);
+                            initSetting();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         Looper.prepare();
-                        if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
-
-                        }
                         Looper.loop();
                     }
                 }).start();
@@ -171,10 +185,9 @@ public class UsbCameraActivity extends AppCompatActivity implements
 
         @Override
         public void onDisConnectDev(UsbDevice device) {
-            showShortMsg("disconnecting");
+            showShortMsg("摄像头已断开");
         }
     };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,14 +196,97 @@ public class UsbCameraActivity extends AppCompatActivity implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            //actionBar.hide();
-//            actionBar.setHomeButtonEnabled(true);
-//            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-        BusFactory.getBus().register(this);
+        setContentView(R.layout.activity_usbcamera);
 
+        actionBar = getSupportActionBar();
+        BusFactory.getBus().register(this);
+        LPR.getInstance().copyDataBase(this);
+        initView();
+        initData();
+        initListener();
+
+    }
+
+    private void initView() {
+        re_c = (RelativeLayout) findViewById(R.id.re_c);
+        DisplayMetrics metric = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metric);
+        width = metric.widthPixels;
+        height = metric.heightPixels;
+
+        if (myView == null) {
+            myView = new LPRfinderView(UsbCameraActivity.this, width, height, bSerialMode);
+            //re_c.addView(myView);
+        }
+
+        mTextureView = findViewById(R.id.camera_view);
+
+        etSetBrightness = findViewById(R.id.et_setbrightness);
+        btResetBrightness = findViewById(R.id.bt_resetbrightness);
+        etSetContrast = findViewById(R.id.et_setcontrast);
+        btResetContrast = findViewById(R.id.bt_resetcontrast);
+        cbAutoContrast = findViewById(R.id.cb_autocontrast);
+        etSetZoom = findViewById(R.id.et_setzoom);
+        btResetZoom = findViewById(R.id.bt_resetzoom);
+        etSetFocus = findViewById(R.id.et_setfocus);
+        btResetFocus = findViewById(R.id.bt_resetfocus);
+        cbAutoFocus = findViewById(R.id.cb_autofocus);
+        etSetHue = findViewById(R.id.et_sethue);
+        btResetHue = findViewById(R.id.bt_resethue);
+        cbAutoHue = findViewById(R.id.cb_autohue);
+        etSetSaturation = findViewById(R.id.et_setsaturation);
+        btResetSaturation = findViewById(R.id.bt_resetsaturation);
+        etSetSharpness = findViewById(R.id.et_setsharpness);
+        btResetSharpness = findViewById(R.id.bt_resetsharpness);
+        etSetGamma = findViewById(R.id.et_setgamma);
+        btResetGamma = findViewById(R.id.bt_resetgamma);
+        etSetGain = findViewById(R.id.et_setgain);
+        btResetGain = findViewById(R.id.bt_resetgain);
+
+        mSeekBrightness = findViewById(R.id.seekbar_brightness);
+        mSeekContrast = findViewById(R.id.seekbar_contrast);
+//        mSeekBrightness.setMax(100);
+//        mSeekBrightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+//                    mCameraHelper.setModelValue(UVCCameraHelper.UVC_BRIGHTNESS,progress);
+//                }
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//        });
+//        mSeekContrast.setMax(100);
+//        mSeekContrast.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+//                    mCameraHelper.setModelValue(UVCCameraHelper.UVC_BRIGHTNESS,progress);
+//                }
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//        });
+    }
+
+    private void initData(){
+        bSerialMode = isSerialMode();
         File sd = Environment.getExternalStorageDirectory();
         pathPic = sd.getPath() + "/HPSB_demo/Plate/";
         File destDir = new File(pathPic);
@@ -198,15 +294,6 @@ public class UsbCameraActivity extends AppCompatActivity implements
             destDir.mkdirs();
         }
 
-        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        LPR.getInstance().copyDataBase(this);
-        bSerialMode = isSerialMode();
-        setContentView(R.layout.activity_usbcamera);
-        findView();
-
-
-        mTextureView = findViewById(R.id.camera_view);
-        // step.1 initialize UVCCameraHelper
         mUVCCameraView = (CameraViewInterface) mTextureView;
         mUVCCameraView.setCallback(this);
         mCameraHelper = UVCCameraHelper.getInstance();
@@ -277,6 +364,376 @@ public class UsbCameraActivity extends AppCompatActivity implements
         });
     }
 
+    private void initSetting(){
+        if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+            etSetBrightness.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_BRIGHTNESS));
+            etSetContrast.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_CONTRAST));
+            cbAutoContrast.setChecked(mCameraHelper.getModelValue(UVCCameraHelper.UVC_AUTO_CONTRAST) == 1);
+            etSetZoom.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_ZOOM));
+            etSetFocus.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_FOCUS));
+            cbAutoFocus.setChecked(mCameraHelper.getModelValue(UVCCameraHelper.UVC_AUTO_FOCUS) == 1);
+            etSetHue.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_HUE));
+            cbAutoHue.setChecked(mCameraHelper.getModelValue(UVCCameraHelper.UVC_AUTO_HUE) == 1);
+            etSetSaturation.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_SATURATION));
+            etSetSharpness.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_SHARPNESS));
+            etSetGamma.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_GAMMA));
+            etSetGain.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_GAIN));
+
+        }
+    }
+
+    private void initListener(){
+        etSetBrightness.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int brightness = mCameraHelper.setModelValue(UVCCameraHelper.UVC_BRIGHTNESS,Integer.parseInt(s.toString()));
+                    showShortMsg("亮度: " + brightness);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetBrightness.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int brightness = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_BRIGHTNESS);
+                    etSetBrightness.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_BRIGHTNESS));
+                    showShortMsg("亮度: " + brightness);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetContrast.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int contrast = mCameraHelper.setModelValue(UVCCameraHelper.UVC_CONTRAST,Integer.parseInt(s.toString()));
+                    showShortMsg("对比度: " + contrast);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetContrast.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int contrast = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_CONTRAST);
+                    etSetContrast.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_CONTRAST));
+                    showShortMsg("对比度: " + contrast);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        cbAutoContrast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    String s = mCameraHelper.setModelValue(UVCCameraHelper.UVC_AUTO_CONTRAST, cbAutoContrast.isChecked() ? 1 : 0) == 1 ? "开启" : "关闭";
+                    showShortMsg("自动对比度: " + s);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetZoom.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int zoom = mCameraHelper.setModelValue(UVCCameraHelper.UVC_ZOOM,Integer.parseInt(s.toString()));
+                    showShortMsg("缩放: " + zoom);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetZoom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int zoom = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_ZOOM);
+                    etSetZoom.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_ZOOM));
+                    showShortMsg("缩放: " + zoom);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetFocus.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int focus = mCameraHelper.setModelValue(UVCCameraHelper.UVC_FOCUS,Integer.parseInt(s.toString()));
+                    showShortMsg("对焦: " + focus);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetFocus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int focus = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_FOCUS);
+                    etSetFocus.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_FOCUS));
+                    showShortMsg("对焦: " + focus);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        cbAutoFocus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    String s = mCameraHelper.setModelValue(UVCCameraHelper.UVC_AUTO_FOCUS, cbAutoFocus.isChecked() ? 1 : 0) == 1 ? "开启" : "关闭";
+                    showShortMsg("自动对焦: " + s);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetHue.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int hue = mCameraHelper.setModelValue(UVCCameraHelper.UVC_HUE,Integer.parseInt(s.toString()));
+                    showShortMsg("色调: " + hue);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetHue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int hue = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_HUE);
+                    etSetHue.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_HUE));
+                    showShortMsg("色调: " + hue);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        cbAutoHue.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    String s = mCameraHelper.setModelValue(UVCCameraHelper.UVC_AUTO_HUE, cbAutoFocus.isChecked() ? 1 : 0) == 1 ? "开启" : "关闭";
+                    showShortMsg("色调: " + s);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetSaturation.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int saturation = mCameraHelper.setModelValue(UVCCameraHelper.UVC_SATURATION,Integer.parseInt(s.toString()));
+                    showShortMsg("饱和度: " + saturation);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetSaturation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int saturation = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_SATURATION);
+                    etSetHue.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_SATURATION));
+                    showShortMsg("饱和度: " + saturation);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetSharpness.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int sharpness = mCameraHelper.setModelValue(UVCCameraHelper.UVC_SHARPNESS,Integer.parseInt(s.toString()));
+                    showShortMsg("锐度: " + sharpness);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetSharpness.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int sharpness = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_SHARPNESS);
+                    etSetSharpness.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_SHARPNESS));
+                    showShortMsg("饱和度: " + sharpness);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetGamma.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int gamma = mCameraHelper.setModelValue(UVCCameraHelper.UVC_GAMMA,Integer.parseInt(s.toString()));
+                    showShortMsg("伽马: " + gamma);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetGamma.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int sharpness = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_GAMMA);
+                    etSetGamma.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_GAMMA));
+                    showShortMsg("伽马: " + sharpness);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+        etSetGain.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int gain = mCameraHelper.setModelValue(UVCCameraHelper.UVC_GAIN,Integer.parseInt(s.toString()));
+                    showShortMsg("增益: " + gain);
+                } else
+                    showShortMsg("摄像头未开启");
+
+            }
+        });
+
+        btResetGain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
+                    int gain = mCameraHelper.resetModelValue(UVCCameraHelper.UVC_GAIN);
+                    etSetGain.setText(mCameraHelper.getModelValue(UVCCameraHelper.UVC_GAIN));
+                    showShortMsg("增益: " + gain);
+                } else
+                    showShortMsg("摄像头未开启");
+            }
+        });
+
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_toobar, menu);
@@ -294,7 +751,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
 
             case R.id.menu_takepic:
                 if (mCameraHelper == null || !mCameraHelper.isCameraOpened()) {
-                    showShortMsg("sorry,camera open failed");
+                    showShortMsg("摄像头未打开");
                     return super.onOptionsItemSelected(item);
                 }
                 String picPath = pathPic + System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
@@ -308,7 +765,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                         new Handler(getMainLooper()).post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(com.sunland.cpocr.activity.UsbCameraActivity.this, "save path:"+path, Toast.LENGTH_SHORT).show();
+                                showShortMsg("图片已保存: " + path);
                             }
                         });
                     }
@@ -316,7 +773,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                 break;
             case R.id.menu_recording:
                 if (mCameraHelper == null || !mCameraHelper.isCameraOpened()) {
-                    showShortMsg("sorry,camera open failed");
+                    showShortMsg("摄像头未打开");
                     return super.onOptionsItemSelected(item);
                 }
                 if (!mCameraHelper.isPushing()) {
@@ -327,6 +784,7 @@ public class UsbCameraActivity extends AppCompatActivity implements
                     RecordParams params = new RecordParams();
                     params.setRecordPath(videoPath);
                     params.setRecordDuration(0);                        // auto divide saved,default 0 means not divided
+                    params.setVoiceClose(false);    // is close voice
 
                     //params.setSupportOverlay(true); // overlay only support armeabi-v7a & arm64-v8a
                     mCameraHelper.startPusher(params, new AbstractUVCCameraHandler.OnEncodeResultListener() {
@@ -352,26 +810,26 @@ public class UsbCameraActivity extends AppCompatActivity implements
                     });
                     // if you only want to push stream,please call like this
                     // mCameraHelper.startPusher(listener);
-                    showShortMsg("start record...");
+                    showShortMsg("开始录制");
                 } else {
                     FileUtils.releaseFile();
                     mCameraHelper.stopPusher();
-                    showShortMsg("stop record...");
+                    showShortMsg("停止录制");
                 }
                 break;
             case R.id.menu_resolution:
                 if (mCameraHelper == null || !mCameraHelper.isCameraOpened()) {
-                    showShortMsg("sorry,camera open failed");
+                    showShortMsg("摄像头未打开");
                     return super.onOptionsItemSelected(item);
                 }
                 showResolutionListDialog();
                 break;
             case R.id.menu_focus:
-                if (mCameraHelper == null || !mCameraHelper.isCameraOpened()) {
-                    showShortMsg("sorry,camera open failed");
-                    return super.onOptionsItemSelected(item);
-                }
-                mCameraHelper.startCameraFoucs();
+//                if (mCameraHelper == null || !mCameraHelper.isCameraOpened()) {
+//                    showShortMsg("摄像头未打开");
+//                    return super.onOptionsItemSelected(item);
+//                }
+//                mCameraHelper.startCameraFoucs();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -440,7 +898,6 @@ public class UsbCameraActivity extends AppCompatActivity implements
         }
     }
 
-
     @Override
     public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
         if (!isPreview && mCameraHelper.isCameraOpened()) {
@@ -477,8 +934,6 @@ public class UsbCameraActivity extends AppCompatActivity implements
                         l = (width - ntmpW) / 2;
                         r = width - l;
                     }
-
-
                 }
 
                 double proportion = 0, hproportion = 0;
@@ -506,12 +961,11 @@ public class UsbCameraActivity extends AppCompatActivity implements
 
                 m_ROI[0] = 0;
                 m_ROI[1] = 0;
-                m_ROI[2] = 640;
-                m_ROI[3] = 480;
+                m_ROI[2] = preWidth;
+                m_ROI[3] = preHeight;
                 Log.d(TAG, "left = " + roiL + ",top = " + roiT + ",right = " + roiR + "，button = " + roiB);
 
                 bROI = true;
-
             }
             if (mTimer == null) {
                 mTimer = new Timer();
@@ -524,7 +978,6 @@ public class UsbCameraActivity extends AppCompatActivity implements
             }
         } catch (Exception e) {
             e.printStackTrace();
-
             return;
         }
 
@@ -619,62 +1072,6 @@ public class UsbCameraActivity extends AppCompatActivity implements
         }
     }
 
-    private void findView() {
-        //surfaceView = (SurfaceView) findViewById(R.id.surfaceViwe);
-
-        re_c = (RelativeLayout) findViewById(R.id.re_c);
-        DisplayMetrics metric = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metric);
-        width = metric.widthPixels;
-        height = metric.heightPixels;
-
-        if (myView == null) {
-            myView = new LPRfinderView(UsbCameraActivity.this, width, height, bSerialMode);
-            //re_c.addView(myView);
-        }
-
-        mTextureView = findViewById(R.id.camera_view);
-        mSeekBrightness = findViewById(R.id.seekbar_brightness);
-        mSeekContrast = findViewById(R.id.seekbar_contrast);
-        mSeekBrightness.setMax(50);
-        mSeekBrightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
-                    mCameraHelper.setModelValue(UVCCameraHelper.MODE_BRIGHTNESS,progress);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mSeekContrast.setMax(128);
-        mSeekContrast.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
-                    mCameraHelper.setModelValue(UVCCameraHelper.MODE_BRIGHTNESS,128-64);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-    }
 
     /**
      * 初始化号牌识别

@@ -26,7 +26,7 @@ android {
         applicationId "com.sunland.cpocr"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 2010230954
+        versionCode 20112014
         versionName "1.0.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -72,10 +72,10 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.multidex:multidex:2.0.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation files('libs/AMap3DMap_7.6.0_AMapNavi_7.6.0_AMapSearch_7.6.0_AMapTrack_1.3.0_AMapLocation_5.2.0_20200915.jar')
     implementation project(path: ':AMapPoiSearchModule')
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.1'
 
     androidTestImplementation('androidx.test.ext:junit:1.1.2') {
         exclude group: 'com.android.support', module: 'support-annotations'
@@ -89,6 +89,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'pub.devrel:easypermissions:3.0.0'
 
-    implementation 'com.github.jiangdongguo:AndroidUSBCamera:2.3.4'
+    //implementation 'com.github.jiangdongguo:AndroidUSBCamera:2.3.4'
+    implementation project(':libusbcamera')
 
 }

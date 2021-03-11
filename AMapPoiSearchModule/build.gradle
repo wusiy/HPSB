@@ -35,6 +35,6 @@ dependencies {
     compileOnly 'com.amap.api:search:7.6.0'
     compileOnly 'com.google.code.gson:gson:2.8.6'
     api 'androidx.appcompat:appcompat:1.2.0'
-    api 'androidx.constraintlayout:constraintlayout:2.0.1'
-    testImplementation 'junit:junit:4.13'
+    api 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation 'junit:junit:4.13.1'
 }

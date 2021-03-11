@@ -7,13 +7,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:weightSum="2">
+        >
 
         <RelativeLayout
             android:id="@+id/re_c"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="2"
+
             >
 
 
@@ -22,6 +22,282 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:rotation = "180"/>
+
+            <ScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!--亮度-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="亮度: " />
+                        <EditText
+                            android:id="@+id/et_setbrightness"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetbrightness"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                    <!--对比度-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="对比度: " />
+                        <EditText
+                            android:id="@+id/et_setcontrast"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetcontrast"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+
+                        <CheckBox
+                            android:id="@+id/cb_autocontrast"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!--缩放-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="ZOOM: " />
+                        <EditText
+                            android:id="@+id/et_setzoom"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetzoom"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                    <!--对焦-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="对焦: " />
+
+                        <EditText
+                            android:id="@+id/et_setfocus"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:hint="0-100 "
+                            android:inputType="number"
+                            android:textSize="10dp" />
+                        <Button
+                            android:id="@+id/bt_resetfocus"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+
+                        <CheckBox
+                            android:id="@+id/cb_autofocus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!--色调-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="色调: " />
+                        <EditText
+                            android:id="@+id/et_sethue"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resethue"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+
+                        <CheckBox
+                            android:id="@+id/cb_autohue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!--饱和度-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="饱和度: " />
+                        <EditText
+                            android:id="@+id/et_setsaturation"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetsaturation"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                    <!--锐度-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="锐度: " />
+                        <EditText
+                            android:id="@+id/et_setsharpness"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetsharpness"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                    <!--伽马-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="伽马: " />
+                        <EditText
+                            android:id="@+id/et_setgamma"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetgamma"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                    <!--增益-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/card_num_color"
+                            android:textSize="12dp"
+                            android:text="增益: " />
+                        <EditText
+                            android:id="@+id/et_setgain"
+                            android:layout_width="60dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:inputType="number"
+                            android:hint="0-100 " />
+                        <Button
+                            android:id="@+id/bt_resetgain"
+                            android:layout_width="50dp"
+                            android:layout_height="match_parent"
+                            android:textSize="10dp"
+                            android:text="重置"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </ScrollView>
 
 
             <LinearLayout
@@ -32,7 +308,8 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="0dp"
@@ -58,7 +335,8 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="0dp"
@@ -66,111 +344,17 @@
                     android:layout_weight="1"
                     android:paddingBottom="7dp"
                     android:paddingTop="7dp"
-                    android:text="亮度(brightness)"
-                    android:textColor="@color/colorWhite"
-                    android:visibility="invisible"/>
+                    android:text="亮度"
+                    android:textColor="@color/colorWhite" />
 
                 <SeekBar
                     android:id="@+id/seekbar_brightness"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:visibility="invisible"/>
+                    android:layout_weight="2" />
             </LinearLayout>
 
         </RelativeLayout>
 
     </LinearLayout>
 </FrameLayout>
-
-
-
-
-<!--<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    xmlns:tools="http://schemas.android.com/tools"-->
-<!--    android:id="@+id/re_c"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent"-->
-<!--    android:background="#ff000000"-->
-<!--    tools:ignore="MergeRootFrame">-->
-
-
-<!--    <FrameLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent">-->
-
-<!--        <com.serenegiant.usb.widget.UVCCameraTextureView-->
-<!--            android:id="@+id/camera_view"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:layout_gravity="center"/>-->
-<!--    </FrameLayout>-->
-
-<!--    <LinearLayout-->
-<!--        android:id="@+id/llayout_contrast"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_alignParentBottom="true"-->
-<!--        android:layout_marginBottom="10dp"-->
-<!--        android:layout_marginLeft="10dp"-->
-<!--        android:layout_marginRight="10dp"-->
-<!--        android:orientation="horizontal">-->
-
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:paddingBottom="7dp"-->
-<!--            android:paddingTop="7dp"-->
-<!--            android:text="对比度(contrast)"-->
-<!--            android:textColor="@color/colorWhite" />-->
-
-<!--        <SeekBar-->
-<!--            android:id="@+id/seekbar_contrast"-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:layout_weight="2" />-->
-<!--    </LinearLayout>-->
-
-<!--    <LinearLayout-->
-<!--        android:id="@+id/llayout_brightness"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_above="@id/llayout_contrast"-->
-<!--        android:layout_marginBottom="10dp"-->
-<!--        android:layout_marginLeft="10dp"-->
-<!--        android:layout_marginRight="10dp"-->
-<!--        android:orientation="horizontal">-->
-
-<!--        <TextView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:paddingBottom="7dp"-->
-<!--            android:paddingTop="7dp"-->
-<!--            android:text="亮度(brightness)"-->
-<!--            android:textColor="@color/colorWhite"-->
-<!--            android:visibility="invisible"/>-->
-
-<!--        <SeekBar-->
-<!--            android:id="@+id/seekbar_brightness"-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:layout_weight="2" />-->
-<!--    </LinearLayout>-->
-
-<!--    <Switch-->
-<!--        android:id="@+id/switch_rec_voice"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_alignLeft="@+id/llayout_brightness"-->
-<!--        android:layout_alignStart="@+id/llayout_brightness"-->
-<!--        android:layout_marginLeft="13dp"-->
-<!--        android:layout_marginStart="13dp"-->
-<!--        android:layout_marginTop="27dp"-->
-<!--        android:checked="false"-->
-<!--        android:text="closeVoice"-->
-<!--        android:textColor="@color/colorWhite" />-->
-
-<!--</RelativeLayout>-->

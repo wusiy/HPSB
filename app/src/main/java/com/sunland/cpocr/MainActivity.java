@@ -1,20 +1,29 @@
 package com.sunland.cpocr;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Environment;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.amap.api.maps.model.MarkerOptions;
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import com.sunland.cpocr.activity.UsbCameraActivity;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
