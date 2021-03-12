@@ -36,6 +36,12 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
+    <!-- USB权限 -->
+    <uses-permission android:name="android.hardware.usb.host"/>
+
+    <!-- uses-feature对外表明它所依赖的软硬件特征，部分应用市场会读取app的uses-feature设置，然后只给那些满足这组软硬件特征的设备分发这个app。 -->
+    <uses-feature android:name="android.hardware.usb.host"/>
+
     <application
         android:name="com.sunland.cpocr.MyApplication"
         android:allowBackup="true"
@@ -48,9 +54,12 @@
             android:screenOrientation = "reverseLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <!-- 可以声明USB插入时启动app的Activity -->
+<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/usb_device_filter" />
         </activity>
 
         <meta-data android:name="com.amap.api.v2.apikey" android:value="dc2a9f4a4aad768837770dc4f002f327">
@@ -129,7 +138,10 @@
             android:screenOrientation="reverseLandscape" >
         </activity>
 
-
+        <activity
+            android:name=".activity.XLWCameraActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="reverseLandscape" >
+        </activity>
     </application>
-
 </manifest>

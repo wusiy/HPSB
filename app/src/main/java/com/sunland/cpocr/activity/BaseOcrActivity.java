@@ -116,7 +116,6 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
 //            actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         LPR.getInstance().copyDataBase(this);
         bSerialMode = isSerialMode();
         setContentView(R.layout.activity_base_ocr);
@@ -150,29 +149,26 @@ public abstract class BaseOcrActivity extends AppCompatActivity implements Surfa
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceView.setFocusable(true);
         mFlashBtn = (ImageButton) findViewById(R.id.photoflash);
-        mFlashBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SharedPreferences.Editor settings = getSharedPreferences("camera_params", 0).edit();
-                String flashMode = mCameraParameters.getFlashMode();
-                //闪光灯只亮一下(持续为 Parameters.FLASH_MODE_TORCH)
-                if (flashMode.equals(Camera.Parameters.FLASH_MODE_ON) ||
-                        flashMode.equals(Camera.Parameters.FLASH_MODE_TORCH)) {
-                    mFlashBtn.setImageResource(R.drawable.cpocr_flash_off);
-                    mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                    settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_OFF);
-                } /*else if (flashMode.equals(Camera.Parameters.FLASH_MODE_AUTO)){//自动
-                    flashBtn.setImageResource(R.drawable.cpocr_flash_off);
-                    mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                    settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_OFF);
-                }*/ else {  //默认关闭
-                    mFlashBtn.setImageResource(R.drawable.cpocr_flash_on);
-                    mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                    settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_TORCH);
-                }
-                settings.commit();
-                mCamera.setParameters(mCameraParameters);
+        mFlashBtn.setOnClickListener(view -> {
+            SharedPreferences.Editor settings = getSharedPreferences("camera_params", 0).edit();
+            String flashMode = mCameraParameters.getFlashMode();
+            //闪光灯只亮一下(持续为 Parameters.FLASH_MODE_TORCH)
+            if (flashMode.equals(Camera.Parameters.FLASH_MODE_ON) ||
+                    flashMode.equals(Camera.Parameters.FLASH_MODE_TORCH)) {
+                mFlashBtn.setImageResource(R.drawable.cpocr_flash_off);
+                mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_OFF);
+            } /*else if (flashMode.equals(Camera.Parameters.FLASH_MODE_AUTO)){//自动
+                flashBtn.setImageResource(R.drawable.cpocr_flash_off);
+                mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_OFF);
+            }*/ else {  //默认关闭
+                mFlashBtn.setImageResource(R.drawable.cpocr_flash_on);
+                mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                settings.putString("FLASH_MODE", Camera.Parameters.FLASH_MODE_TORCH);
             }
+            settings.commit();
+            mCamera.setParameters(mCameraParameters);
         });
         mBackBtn = findViewById(R.id.orc_back_btn);
         mBackBtn.setOnClickListener(new View.OnClickListener() {

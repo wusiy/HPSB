@@ -75,6 +75,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation files('libs/AMap3DMap_7.6.0_AMapNavi_7.6.0_AMapSearch_7.6.0_AMapTrack_1.3.0_AMapLocation_5.2.0_20200915.jar')
     implementation project(path: ':AMapPoiSearchModule')
+    implementation 'org.jetbrains:annotations:15.0'
     testImplementation 'junit:junit:4.13.1'
 
     androidTestImplementation('androidx.test.ext:junit:1.1.2') {

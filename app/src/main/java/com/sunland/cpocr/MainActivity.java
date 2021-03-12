@@ -19,6 +19,7 @@ import com.amap.api.maps.model.MarkerOptions;
 import com.sunland.cpocr.activity.LprMapActivity;
 import com.sunland.cpocr.activity.OfflineLprMapActivity;
 import com.sunland.cpocr.activity.UsbCameraActivity;
+import com.sunland.cpocr.activity.XLWCameraActivity;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -58,30 +59,33 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             destDir.mkdirs();
         }
 
-        final String items[] = {"在线模式", "离线模式", "UsbCamera"};
+        final String items[] = {"在线模式", "离线模式", "UVC_Camera", "信路威"};
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("选择模式")
-                .setItems(items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(which == 0){
-                            Intent intent;
-                            intent = new Intent(MainActivity.this, LprMapActivity.class);
-                            intent.putExtra(NAVI_TYPE_KEY, "");
-                            startActivity(intent);
-                            finish();
-                        } else if(which == 1){
-                            Intent intent;
-                            intent = new Intent(MainActivity.this, OfflineLprMapActivity.class);
-                            intent.putExtra(NAVI_TYPE_KEY, "");
-                            startActivity(intent);
-                            finish();
-                        } else if(which == 2){
-                            Intent intent;
-                            intent = new Intent(MainActivity.this, UsbCameraActivity.class);
-                            startActivity(intent);
-                            finish();
-                        }
+                .setItems(items, (dialog1, which) -> {
+                    if(which == 0) {
+                        Intent intent;
+                        intent = new Intent(MainActivity.this, LprMapActivity.class);
+                        intent.putExtra(NAVI_TYPE_KEY, "");
+                        startActivity(intent);
+                        finish();
+                    } else if(which == 1) {
+                        Intent intent;
+                        intent = new Intent(MainActivity.this, OfflineLprMapActivity.class);
+                        intent.putExtra(NAVI_TYPE_KEY, "");
+                        startActivity(intent);
+                        finish();
+                    } else if(which == 2) {
+                        Intent intent;
+                        intent = new Intent(MainActivity.this, UsbCameraActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else if(which == 3) {
+                        Intent intent;
+                        intent = new Intent(MainActivity.this, XLWCameraActivity.class);
+                        intent.putExtra(NAVI_TYPE_KEY, "");
+                        startActivity(intent);
+                        finish();
                     }
                 })
                 .setNegativeButton("取消", new DialogInterface.OnClickListener() {
