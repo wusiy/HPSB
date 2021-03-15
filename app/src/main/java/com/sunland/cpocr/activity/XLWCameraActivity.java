@@ -913,7 +913,6 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
 
     }
 
-
     private SearchModuleDelegate.IParentDelegate mSearchModuleParentDelegate = new ISearchModule.IDelegate.IParentDelegate() {
         @Override
         public void onChangeCityName() {
@@ -992,25 +991,18 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
         final String items[] = {"重新设置家的地址", "导航至家"};
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("选择下一步操作")
-                .setItems(items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(which == 0){
-                            toSetFavAddressActivity(0);
-                        } else if(which == 1){
-                            saveToCache(poiItem);
-                            desLat = poiItem.getLatLonPoint().getLatitude();
-                            desLgt = poiItem.getLatLonPoint().getLongitude();
-                            deslocation = poiItem.getTitle();
-                            chooseRoute();
-                        }
-                    }})
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
+                .setItems(items, (dialog1, which) -> {
+                    if(which == 0){
+                        toSetFavAddressActivity(0);
+                    } else if(which == 1){
+                        saveToCache(poiItem);
+                        desLat = poiItem.getLatLonPoint().getLatitude();
+                        desLgt = poiItem.getLatLonPoint().getLongitude();
+                        deslocation = poiItem.getTitle();
+                        chooseRoute();
                     }
-                }).create();
+                })
+                .setNegativeButton("取消", (dialog12, which) -> dialog12.dismiss()).create();
         dialog.show();
     }
 
@@ -1105,16 +1097,6 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    protected void handleIntent(Intent intent) {
-        final String hphm = intent.getStringExtra(BaseOcrActivity.EXTRA_RET_HPHM);
-        final String hpysStr = intent.getStringExtra(BaseOcrActivity.EXTRA_RET_HPYS_STR);
-        final String[] hpzls = CpocrUtils.getHpzlFromOcr(hphm, hpysStr);
-        final String hpzl = hpzls[0];
-        final String hpzlStr = hpzls[1];
-        Toast.makeText(this,hphm,Toast.LENGTH_SHORT).show();
-        //adapter.add(hphm, hpzl, hpzlStr, hpysStr);
-    }
-
     // 数据读取线程
     private class Reader implements Runnable {
         USBDataParser dataParser = new USBDataParser(); // 数据解析器
@@ -1153,23 +1135,21 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
 
                 runOnUiThread(() -> {
                     for (int i = 1; i < dataParser.m_result.m_BigImageList.size(); i++) {
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(dataParser.m_result.m_BigImageList.get(i).imageData, 0, dataParser.m_result.m_BigImageList.get(i).imageData.length);
-                        //ImageView imageView = findViewById(R.id.imageView);
-                        //imageView.setImageBitmap(bitmap);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(dataParser.m_result.m_BigImageList.get(i).imageData, 0,
+                                dataParser.m_result.m_BigImageList.get(i).imageData.length);
                         String carNum = dataParser.m_result.m_strPlateNum.substring(1);
                         //String carType = carColor2CarType(dataParser.m_result.m_strPlateNum.substring(0, 0));
                         mVibrator.vibrate(300);
                         String pathPhoto = saveMyBitmap(bitmap);
                         dbCpHmZp = new DbCpHmZp(XLWCameraActivity.this);
                         dbCpHmZp.open();
-                        dbCpHmZp.save_carinfo(carNum, dataParser.m_result.m_strPlateNum.substring(0,0) + "色", pathPhoto);
+                        dbCpHmZp.save_carinfo(carNum, dataParser.m_result.m_strPlateNum.substring(0,0), pathPhoto);
                         dbCpHmZp.close();
                         Toast.makeText(XLWCameraActivity.this, dataParser.m_result.m_strPlateNum,Toast.LENGTH_LONG).show();
                         break;
                     }
                 });
             }
-
         }
     } // end 数据读取线程
 
@@ -1230,26 +1210,6 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
             }
         }
     } // end 数据读取线程
-
-    //车牌颜色转车牌类型(ex: "蓝" -> "02")
-    private String carColor2CarType(String carColor) {
-        switch (carColor) {
-            case ("蓝"):
-                return "02";
-
-            case ("绿"):
-                return "52";
-
-            case ("黄"):
-                return "16";
-
-            case ("白"):
-                return "22";
-
-            default:
-                return "02";
-        }
-    }
 
     //保存文件到指定路径
     private String saveMyBitmap(Bitmap bitmap) {
@@ -1325,6 +1285,8 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
         mDecoder = new VideoDecoder();
         mDecoder.start();
         firstFrame = true;
+        m_myUSB.OpenDevice(XLWCameraActivity.this);
+        m_bOpen = true;
     }
 
     @Override
@@ -1337,7 +1299,6 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         mDecoder.stop();
     }
-
 
     @Override
     public void onInitNaviFailure() {
