@@ -1143,6 +1143,7 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
                         String pathPhoto = saveMyBitmap(bitmap);
                         dbCpHmZp = new DbCpHmZp(XLWCameraActivity.this);
                         dbCpHmZp.open();
+                        // TODO:此处将号牌号码及颜色记入数据库，需测试检查下车牌记录功能上是否正常, 识别返回结果的第一位为车牌颜色
                         dbCpHmZp.save_carinfo(carNum, dataParser.m_result.m_strPlateNum.substring(0,0), pathPhoto);
                         dbCpHmZp.close();
                         Toast.makeText(XLWCameraActivity.this, dataParser.m_result.m_strPlateNum,Toast.LENGTH_LONG).show();

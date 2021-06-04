@@ -22,7 +22,6 @@ public class VideoDecoder implements VideoCodec {
     public void configure(Surface surface, int width, int height, byte[] csd0, int offset, int size) {
         if (mWorker != null) {
             mWorker.configure(surface, width, height, ByteBuffer.wrap(csd0, offset, size));
-            Log.d("SSSSSSSS", "config");
         }
     }
 
@@ -106,7 +105,7 @@ public class VideoDecoder implements VideoCodec {
 
 
                 while (mRunning) {
-                    //long start = System.currentTimeMillis();
+                    long start = System.currentTimeMillis();
                     if (mConfigured) {
                         int index = mCodec.dequeueOutputBuffer(info, 0);
                         if (index >= 0) {
@@ -121,14 +120,14 @@ public class VideoDecoder implements VideoCodec {
                     } else {
                         // just waiting to be configured, then decode and render
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(10);
                         } catch (InterruptedException ignore) {
                         }
                     }
                 }
             } finally {
                 if (mConfigured) {
-                    //mCodec.stop();
+                    mCodec.stop();
                     mCodec.release();
                 }
             }

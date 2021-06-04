@@ -23,6 +23,7 @@ import com.sunland.cpocr.activity.XLWCameraActivity;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             destDir.mkdirs();
         }
 
-        final String items[] = {"在线模式", "离线模式", "UVC_Camera", "信路威"};
+        final String items[] = {"网络定位模式", "GPS定位模式", "UVC_Camera", "信路威"};
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("选择模式")
                 .setItems(items, (dialog1, which) -> {

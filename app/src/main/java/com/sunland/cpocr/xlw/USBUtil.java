@@ -36,7 +36,7 @@ public class USBUtil {
     private static final int IN_ENDPOINT = 1;
 
     // 单例模式
-    private static com.sunland.cpocr.xlw.USBUtil m_Instance = null;
+    private static USBUtil m_Instance = null;
 
     private Activity m_Activity;  // 上下文
     private static UsbManager m_UsbManager; // usb管理器
@@ -55,11 +55,11 @@ public class USBUtil {
     private static ReentrantLock m_Mutex = new ReentrantLock();  // 队列锁
 
     // 对外接口::单例模式获取
-    public static com.sunland.cpocr.xlw.USBUtil getInstance() {
+    public static USBUtil getInstance() {
         if (m_Instance == null) {
-            synchronized (com.sunland.cpocr.xlw.USBUtil.class) {
+            synchronized (USBUtil.class) {
                 if (m_Instance == null) {
-                    m_Instance = new com.sunland.cpocr.xlw.USBUtil();
+                    m_Instance = new USBUtil();
                 }
             }
         }
@@ -233,10 +233,10 @@ public class USBUtil {
                 }
             } else if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
                 // 有新的设备插入，可以在这里做自动open设备的初始化
-                com.sunland.cpocr.xlw.USBUtil.getInstance().openUSB(com.sunland.cpocr.xlw.USBUtil.getInstance().m_Activity);
+                USBUtil.getInstance().openUSB(USBUtil.getInstance().m_Activity);
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 // 有设备拔出了
-                com.sunland.cpocr.xlw.USBUtil.getInstance().closeUSB();
+                USBUtil.getInstance().closeUSB();
             }
 
         }
