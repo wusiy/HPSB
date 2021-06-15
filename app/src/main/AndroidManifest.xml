@@ -19,6 +19,8 @@
     <uses-permission android:name="sunland.permission.STORE_PROVIDER_USERINFO" />
     <uses-permission android:name="sunland.permission.READ_STORE_USERINFO" />
     <uses-permission android:name="sunland.permission.WRITE_STORE_USERINFO" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
 
     <!--用于进行网络定位-->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>

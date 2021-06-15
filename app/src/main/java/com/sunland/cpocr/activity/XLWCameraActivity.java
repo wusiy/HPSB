@@ -1120,7 +1120,7 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
 
                 // 取数据
                 byte[] resultData = MyUsbResult.GetOneResult();
-                if (resultData.length <= 0) {
+                if (resultData == null || resultData.length <= 0) {
                     continue;
                 }
 
@@ -1177,7 +1177,7 @@ public class XLWCameraActivity extends AppCompatActivity implements SurfaceHolde
 
                 // 取数据
                 byte[] videoData = MyUsbResult.GetOneFrame();
-                if (videoData == null && videoData.length <= 0) {
+                if (videoData == null || videoData.length <= 0) {
                     continue;
                 }
 

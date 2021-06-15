@@ -16,7 +16,9 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven { url 'http://raw.github.com/saki4510t/libcommon/master/repository/' }
+        //maven { url 'http://raw.github.com/saki4510t/libcommon/master/repository/' }
+        maven { url 'https://gitee.com/liuchaoya/libcommon/raw/master/repository/' }
+
         //maven { url 'https://jitpack.io' }
     }
 }

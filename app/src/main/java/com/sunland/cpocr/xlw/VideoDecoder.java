@@ -127,8 +127,11 @@ public class VideoDecoder implements VideoCodec {
                 }
             } finally {
                 if (mConfigured) {
-                    mCodec.stop();
-                    mCodec.release();
+                    try {
+                        mCodec.stop();
+                        mCodec.release();
+                    } catch (Exception e) {
+                    }
                 }
             }
         }

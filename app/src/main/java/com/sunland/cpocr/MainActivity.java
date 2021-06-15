@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         intent = new Intent(MainActivity.this, XLWCameraActivity.class);
                         intent.putExtra(NAVI_TYPE_KEY, "");
                         startActivity(intent);
-                        finish();
+                        //finish();
                     }
                 })
                 .setNegativeButton("取消", new DialogInterface.OnClickListener() {
